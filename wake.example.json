@@ -1,0 +1,8 @@
+[
+    {
+        "name": "host.local",
+        "ip": "127.0.0.1",
+        "mac": "AA:BB:CC:DD:EE:FF",
+        "port": 9
+    }
+]

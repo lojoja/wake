@@ -1,0 +1,5 @@
+click>=5.0
+click_log>=0.1.8
+ipaddress>=1.0.18
+marshmallow>=2.13.6
+texttable>=0.9.1
