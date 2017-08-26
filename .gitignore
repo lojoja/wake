@@ -1,0 +1,8 @@
+*.egg-ignore
+*.egg-info
+*.log
+*.py[cod]
+.DS_Store
+__pycache__
+wake.json
+venv/
