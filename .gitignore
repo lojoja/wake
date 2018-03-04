@@ -1,8 +1,6 @@
 *.egg-ignore
 *.egg-info
-*.log
 *.py[cod]
 .DS_Store
+.venv/
 __pycache__
-wake.json
-venv/
