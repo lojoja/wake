@@ -37,16 +37,18 @@ setup(
         'Programming Language :: Python :: 2.7'
     ],
     packages=['wake'],
+    data_files=[
+        ('/usr/local/etc', ['wake.example.json'])
+    ],
     install_requires=[
-        'click>=5.0',
-        'click_log>=0.1.8',
-        'ipaddress>=1.0.18',
-        'marshmallow>=2.13.6',
-        'texttable>=0.9.1'
+        'click>=6.0',
+        'ipaddress>=1.0.19',
+        'marshmallow>=2.15.0',
+        'texttable>=1.2.1'
     ],
     entry_points={
         'console_scripts': [
-            'wake=wake.cli:cli'
+            'wake=wake.core:cli'
         ]
     }
 )

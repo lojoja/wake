@@ -1,2 +1,2 @@
-include LICENSE README.md
+include LICENSE README.md wake.example.json
 global-exclude *.py[cod] .DS_Store

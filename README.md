@@ -9,16 +9,15 @@ Requirements
 
 * macOS 10.10.x
 * Python 2.7.x
-* [Homebrew](https://brew.sh)
 
 
 Installation
 ------------
 
 ```
-brew tap lojoja/main
-brew install wake
+pip install git+https://github.com/lojoja/wake.git
 ```
+
 
 Use
 ---
@@ -57,7 +56,9 @@ wake --quiet host myhost
 Configure
 ---------
 
-Hosts are defined in `wake.json`. Each host must have a `name` and `mac` address; `ip` and `port` are optional. `ip` is an IPv4 address. Mac addresses can be formatted as follows:
+Copy `/usr/local/etc/wake.example.json` to `/usr/local/etc/wake.json` and add entries for each remote host.
+
+Every host must have a `name` and `mac` address; `ip` and `port` are optional. `ip` is an IPv4 address. Mac addresses can be formatted as follows:
 
 - 00:11:22:33:44:55
 - 00-11-22-33-44-55
