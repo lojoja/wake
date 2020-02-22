@@ -33,8 +33,8 @@ setup(
         'Environment :: Console',
         'License :: OSI Approved :: MIT License',
         'Operating System :: MacOS :: MacOS X',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7'
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
     ],
     packages=['wake'],
     data_files=[('/usr/local/etc', ['wake.example.json'])],

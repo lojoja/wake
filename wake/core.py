@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from codecs import open
 import json
 import logging
