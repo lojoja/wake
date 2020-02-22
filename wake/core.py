@@ -33,7 +33,7 @@ class ClickFormatter(logging.Formatter):
         'debug': 'blue',
         'error': 'red',
         'exception': 'red',
-        'warning': 'yellow'
+        'warning': 'yellow',
     }
 
     def format(self, record):
@@ -41,7 +41,9 @@ class ClickFormatter(logging.Formatter):
             level = record.levelname.lower()
             msg = record.msg
             if level in self.colors:
-                prefix = click.style('{0}: '.format(level.title()), fg=self.colors[level])
+                prefix = click.style(
+                    '{0}: '.format(level.title()), fg=self.colors[level]
+                )
                 if not isinstance(msg, (str, bytes)):
                     msg = str(msg)
                 msg = '\n'.join(prefix + l for l in msg.splitlines())
@@ -50,12 +52,7 @@ class ClickFormatter(logging.Formatter):
 
 
 class ClickHandler(logging.Handler):
-    error_levels = [
-        'critical',
-        'error',
-        'exception',
-        'warning'
-    ]
+    error_levels = ['critical', 'error', 'exception', 'warning']
 
     def emit(self, record):
         try:
@@ -74,6 +71,7 @@ logger.addHandler(click_handler)
 
 class Host(object):
     """ Host configuration. """
+
     def __init__(self, schema):
         self.name = schema['name']
         self.ip = schema['ip']
@@ -86,7 +84,7 @@ class Host(object):
         packet = b''
 
         for i in range(0, len(raw), 2):
-            packet = b''.join([packet, struct.pack('B', int(raw[i: i + 2], 16))])
+            packet = b''.join([packet, struct.pack('B', int(raw[i : i + 2], 16))])
 
         return packet
 
@@ -100,6 +98,7 @@ class Host(object):
 
 class HostSchema(Schema):
     """ Schema for hosts. """
+
     name = String(default='', missing='')
     ip = String(default='255.255.255.255', missing='255.255.255.255')
     mac = String(default='', missing='')
@@ -114,7 +113,7 @@ class HostSchema(Schema):
             data['mac'] = data['mac'].replace('-', ':')
 
         if len(data['mac']) == 12:
-            data['mac'] = ':'.join(data['mac'][i:i + 2] for i in range(0, 12, 2))
+            data['mac'] = ':'.join(data['mac'][i : i + 2] for i in range(0, 12, 2))
 
         data['mac'] = data['mac'].upper()
         return data
@@ -161,15 +160,13 @@ class Context(object):
 
 class Configuration(object):
     """ Container for configuration. """
+
     filename = '{0}.json'.format(PROGRAM_NAME)
-    paths = [
-        '/usr/local/etc',
-        '/etc'
-    ]
+    paths = ['/usr/local/etc', '/etc']
     table = {
         'cols_align': ['l', 'c', 'c', 'c'],
         'cols_valign': ['m', 'm', 'm', 'm'],
-        'header': ['Hostname', 'MAC Addr', 'IP Addr', 'Port']
+        'header': ['Hostname', 'MAC Addr', 'IP Addr', 'Port'],
     }
 
     def __init__(self):
@@ -181,7 +178,9 @@ class Configuration(object):
         return self._data
 
     def find_host(self, name):
-        return next((host for host in self.data if host.name.lower() == name.lower()), None)
+        return next(
+            (host for host in self.data if host.name.lower() == name.lower()), None
+        )
 
     def get_config_file(self):
         """ Locate the configuration file to use. """
@@ -213,7 +212,9 @@ class Configuration(object):
         if data is None:
             return None
         elif not isinstance(data, list):
-            raise click.ClickException('Invalid configuration data, config root must be a list')
+            raise click.ClickException(
+                'Invalid configuration data, config root must be a list'
+            )
 
         loaded = []
         schema = HostSchema()
@@ -224,7 +225,9 @@ class Configuration(object):
             if errors:
                 error_name = raw_host.get('name', idx)
                 error_msg = '::'.join('{0}'.format(v[0]) for k, v in errors.items())
-                logger.warning('Invalid host definition "{0}": {1}'.format(error_name, error_msg))
+                logger.warning(
+                    'Invalid host definition "{0}": {1}'.format(error_name, error_msg)
+                )
             else:
                 loaded.append(Host(schema_host))
 
@@ -249,7 +252,13 @@ class Configuration(object):
 
 
 @click.group()
-@click.option('--verbose/--quiet', '-v/-q', is_flag=True, default=None, help='Specify verbosity level.')
+@click.option(
+    '--verbose/--quiet',
+    '-v/-q',
+    is_flag=True,
+    default=None,
+    help='Specify verbosity level.',
+)
 @click.version_option()
 @click.pass_context
 def cli(ctx, verbose):
@@ -260,7 +269,9 @@ def cli(ctx, verbose):
 
     logger.debug('Checking macOS version')
     if ctx.obj.macos_version < MIN_MACOS_VERSION:
-        raise click.ClickException('{0} requires macOS {1} or higher'.format(PROGRAM_NAME, MIN_MACOS_VERSION))
+        raise click.ClickException(
+            '{0} requires macOS {1} or higher'.format(PROGRAM_NAME, MIN_MACOS_VERSION)
+        )
 
     if ctx.invoked_subcommand is not None:
         ctx.obj.config = Configuration()
