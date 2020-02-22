@@ -1,4 +1,5 @@
 from codecs import open
+from ipaddress import AddressValueError, IPv4Address
 import json
 import logging
 import os
@@ -8,7 +9,6 @@ import socket
 import struct
 
 import click
-from ipaddress import AddressValueError, IPv4Address
 from marshmallow import Schema, post_load, validates, ValidationError
 from marshmallow.fields import Integer, String
 from texttable import Texttable
@@ -132,7 +132,9 @@ class HostSchema(Schema):
         regex = re.compile(
             r'^(?:(?:[0-9A-F]{2}([-:]))(?:[0-9A-F]{2}\1){4}[0-9A-F]{2}'  # 00:11:22:33:44:55 / 00-11-22-33-44-55
             r'|(?:[0-9A-F]{4}\.){2}[0-9A-F]{4}'  # 0011.2233.4455
-            r'|[0-9A-F]{12})$', re.IGNORECASE)  # 001122334455
+            r'|[0-9A-F]{12})$',
+            re.IGNORECASE,
+        )  # 001122334455
 
         if regex.match(data) is None:
             raise ValidationError('"{0}" is not a valid MAC address.'.format(data))
