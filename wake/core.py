@@ -105,7 +105,7 @@ class HostSchema(Schema):
     port = Integer(default=9, missing=9)
 
     @post_load
-    def format_mac(self, data):
+    def format_mac(self, data, **kwargs):
         """ Format a MAC address as 00:11:22:33:44:55. """
         if '.' in data['mac']:
             data['mac'] = data['mac'].replace('.', '')
@@ -119,7 +119,7 @@ class HostSchema(Schema):
         return data
 
     @validates('ip')
-    def validate_ip(self, data):
+    def validate_ip(self, data, **kwargs):
         """ Validates an IPv4 address. """
         try:
             IPv4Address(data)
@@ -127,7 +127,7 @@ class HostSchema(Schema):
             raise ValidationError('"{0}" is not a valid IPv4 address.'.format(data))
 
     @validates('mac')
-    def validate_mac(self, data):
+    def validate_mac(self, data, **kwargs):
         """ Validates a MAC address. """
         regex = re.compile(
             r'^(?:(?:[0-9A-F]{2}([-:]))(?:[0-9A-F]{2}\1){4}[0-9A-F]{2}'  # 00:11:22:33:44:55 / 00-11-22-33-44-55
@@ -140,7 +140,7 @@ class HostSchema(Schema):
             raise ValidationError('"{0}" is not a valid MAC address.'.format(data))
 
     @validates('port')
-    def validate_port(self, data):
+    def validate_port(self, data, **kwargs):
         """ Validates a port number. """
         if not 0 <= data <= 65535:
             raise ValidationError('"{0}" is not a valid port number.'.format(data))
