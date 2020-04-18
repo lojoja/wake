@@ -222,11 +222,13 @@ class Configuration(object):
         schema = HostSchema()
 
         for idx, raw_host in enumerate(data):
-            schema_host, errors = schema.load(raw_host)
-
-            if errors:
+            try:
+                schema_host = schema.load(raw_host)
+            except ValidationError as err:
                 error_name = raw_host.get('name', idx)
-                error_msg = '::'.join('{0}'.format(v[0]) for k, v in errors.items())
+                error_msg = '::'.join(
+                    '{0}'.format(v[0]) for k, v in err.messages.items()
+                )
                 logger.warning(
                     'Invalid host definition "{0}": {1}'.format(error_name, error_msg)
                 )
