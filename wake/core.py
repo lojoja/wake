@@ -204,7 +204,7 @@ class Configuration(object):
         if file:
             try:
                 with open(file, mode='rb', encoding='utf-8') as f:
-                    data = json.loads(f.read(), encoding='utf-8')
+                    data = json.loads(f.read())
             except ValueError:
                 raise click.ClickException('Failed to parse configuration file')
         return data
