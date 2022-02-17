@@ -7,7 +7,6 @@ A simple wakeonlan implementation for waking defined hosts.
 Requirements
 ------------
 
-* macOS 10.10.x
 * Python 3.9.x
 
 

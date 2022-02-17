@@ -20,7 +20,6 @@ __all__ = ['cli']
 
 
 PROGRAM_NAME = 'wake'
-MIN_MACOS_VERSION = 10.10
 
 logger = logging.getLogger(PROGRAM_NAME)
 setup_logger(logger)
@@ -111,13 +110,7 @@ class Context(object):
     def __init__(self):
         logger.debug('Gathering system and environment details')
 
-        self.macos_version = self._get_mac_version()
         self.config = None
-
-    def _get_mac_version(self):
-        version = platform.mac_ver()[0]
-        version = float('.'.join(version.split('.')[:2]))  # format as e.g., '10.10'
-        return version
 
 
 class Configuration(object):
@@ -231,12 +224,6 @@ def cli(ctx, verbose):
     logger.debug('{0} started'.format(PROGRAM_NAME))
 
     ctx.obj = Context()
-
-    logger.debug('Checking macOS version')
-    if ctx.obj.macos_version < MIN_MACOS_VERSION:
-        raise click.ClickException(
-            '{0} requires macOS {1} or higher'.format(PROGRAM_NAME, MIN_MACOS_VERSION)
-        )
 
     if ctx.invoked_subcommand is not None:
         ctx.obj.config = Configuration()
