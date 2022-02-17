@@ -14,59 +14,20 @@ from marshmallow.fields import Integer, String
 from texttable import Texttable
 
 from wake import __version__  # noqa
+from wake.log import change_logger_level, setup_logger
 
 __all__ = ['cli']
 
 
 PROGRAM_NAME = 'wake'
 MIN_MACOS_VERSION = 10.10
-LOG_VERBOSITY_MAP = {True: logging.DEBUG, False: logging.WARNING}
+
+logger = logging.getLogger(PROGRAM_NAME)
+setup_logger(logger)
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-
-class ClickFormatter(logging.Formatter):
-    colors = {
-        'critical': 'red',
-        'debug': 'blue',
-        'error': 'red',
-        'exception': 'red',
-        'warning': 'yellow',
-    }
-
-    def format(self, record):
-        if not record.exc_info:
-            level = record.levelname.lower()
-            msg = record.msg
-            if level in self.colors:
-                prefix = click.style(
-                    '{0}: '.format(level.title()), fg=self.colors[level]
-                )
-                if not isinstance(msg, (str, bytes)):
-                    msg = str(msg)
-                msg = '\n'.join(prefix + l for l in msg.splitlines())
-            return msg
-        return logging.Formatter.format(self, record)
-
-
-class ClickHandler(logging.Handler):
-    error_levels = ['critical', 'error', 'exception', 'warning']
-
-    def emit(self, record):
-        try:
-            msg = self.format(record)
-            err = record.levelname.lower() in self.error_levels
-            click.echo(msg, err=err)
-        except Exception:
-            self.handleError(record)
-
-
-click_handler = ClickHandler()
-click_formatter = ClickFormatter()
-click_handler.setFormatter(click_formatter)
-logger.addHandler(click_handler)
+FLAGS_QUIET = ['--quiet', '-q']
+FLAGS_VERBOSE = ['--verbose', '-v']
 
 
 class Host(object):
@@ -147,10 +108,9 @@ class HostSchema(Schema):
 
 
 class Context(object):
-    def __init__(self, verbose):
+    def __init__(self):
         logger.debug('Gathering system and environment details')
 
-        self.verbose = verbose
         self.macos_version = self._get_mac_version()
         self.config = None
 
@@ -256,20 +216,21 @@ class Configuration(object):
 
 
 @click.group()
-@click.option(
-    '--verbose/--quiet',
-    '-v/-q',
-    is_flag=True,
-    default=None,
-    help='Specify verbosity level.',
-)
+@click.option(f'{FLAGS_VERBOSE[0]}/{FLAGS_QUIET[0]}', f'{FLAGS_VERBOSE[1]}/{FLAGS_QUIET[1]}',
+              is_flag=True, default=None, help='Specify verbosity level.')
 @click.version_option()
 @click.pass_context
 def cli(ctx, verbose):
-    logger.setLevel(LOG_VERBOSITY_MAP.get(verbose, logging.INFO))
+    if verbose is None and ctx.invoked_subcommand:
+        if any(arg in FLAGS_VERBOSE for arg in ctx.obj):
+            verbose = True
+        elif any(arg in FLAGS_QUIET for arg in ctx.obj):
+            verbose = False
+
+    change_logger_level(logger, verbose)
     logger.debug('{0} started'.format(PROGRAM_NAME))
 
-    ctx.obj = Context(verbose)
+    ctx.obj = Context()
 
     logger.debug('Checking macOS version')
     if ctx.obj.macos_version < MIN_MACOS_VERSION:
