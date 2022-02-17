@@ -201,7 +201,29 @@ class Configuration(object):
         click.echo(table.draw())
 
 
-@click.group()
+class CLIGroup(click.Group):
+    """CLI command group.
+
+    Collects common options to parse at group level and handles exceptions from subcommands.
+
+    """
+    def invoke(self, ctx):
+        ctx.obj = tuple(ctx.args)
+        ctx.args = tuple(arg for arg in ctx.args if arg not in FLAGS_QUIET + FLAGS_VERBOSE)
+
+        try:
+            super(CLIGroup, self).invoke(ctx)
+        except click.exceptions.Exit:
+            pass
+        except click.UsageError as e:
+            raise click.ClickException(e) from e
+        except (EOFError, KeyboardInterrupt, click.Abort, click.ClickException):
+            raise
+        except Exception as e:
+            raise click.ClickException(e) from e
+
+
+@click.group(cls=CLIGroup)
 @click.option(f'{FLAGS_VERBOSE[0]}/{FLAGS_QUIET[0]}', f'{FLAGS_VERBOSE[1]}/{FLAGS_QUIET[1]}',
               is_flag=True, default=None, help='Specify verbosity level.')
 @click.version_option()
