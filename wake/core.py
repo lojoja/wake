@@ -106,13 +106,6 @@ class HostSchema(Schema):
             raise ValidationError('"{0}" is not a valid port number.'.format(data))
 
 
-class Context(object):
-    def __init__(self):
-        logger.debug('Gathering system and environment details')
-
-        self.config = None
-
-
 class Configuration(object):
     """ Container for configuration. """
 
@@ -223,10 +216,8 @@ def cli(ctx, verbose):
     change_logger_level(logger, verbose)
     logger.debug('{0} started'.format(PROGRAM_NAME))
 
-    ctx.obj = Context()
-
-    if ctx.invoked_subcommand is not None:
-        ctx.obj.config = Configuration()
+    if ctx.invoked_subcommand:
+        ctx.obj = Configuration()
 
 
 @cli.command()
@@ -241,11 +232,11 @@ def host(ctx, hostnames):
     hosts_to_wake = []
 
     if len(hostnames) == 1 and hostnames[0].lower() == 'all':
-        logger.debug('Waking all {0} defined hosts'.format(len(ctx.obj.config.data)))
-        hosts_to_wake = ctx.obj.config.data
+        logger.debug('Waking all {0} defined hosts'.format(len(ctx.obj.data)))
+        hosts_to_wake = ctx.obj.data
     else:
         for hostname in hostnames:
-            host = ctx.obj.config.find_host(hostname)
+            host = ctx.obj.find_host(hostname)
             if host is None:
                 logger.warning('Unknown host "{0}"'.format(hostname))
             else:
@@ -263,7 +254,7 @@ def host(ctx, hostnames):
 @click.pass_context
 def show(ctx):
     """ Show all defined hosts. """
-    ctx.obj.config.show()
+    ctx.obj.show()
 
 
 def show_exception(self, file=None):
