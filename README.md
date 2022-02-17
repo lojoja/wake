@@ -8,7 +8,7 @@ Requirements
 ------------
 
 * macOS 10.10.x
-* Python 3.7.x
+* Python 3.9.x
 
 
 Installation
