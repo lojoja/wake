@@ -42,8 +42,7 @@ setup(
     ],
     install_requires=[
         'click==8.0.3',
-        'marshmallow==3.14.1',
-        'texttable==1.6.4'
+        'tabulate==0.8.9'
     ],
     entry_points={
         'console_scripts': [

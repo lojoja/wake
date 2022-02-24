@@ -1,17 +1,13 @@
-from codecs import open
 from ipaddress import AddressValueError, IPv4Address
 import json
 import logging
-import os
-import platform
+import pathlib
 import re
 import socket
 import struct
 
 import click
-from marshmallow import Schema, post_load, validates, ValidationError
-from marshmallow.fields import Integer, String
-from texttable import Texttable
+from tabulate import tabulate
 
 from wake import __version__  # noqa
 from wake.log import change_logger_level, setup_logger
@@ -20,185 +16,196 @@ __all__ = ['cli']
 
 
 PROGRAM_NAME = 'wake'
+CONFIG_FILE = f'{PROGRAM_NAME}.json'
+FLAGS_QUIET = ['--quiet', '-q']
+FLAGS_VERBOSE = ['--verbose', '-v']
+MAC_PATTERN = re.compile(
+    r'^(?:(?:[0-9A-F]{2}([-:]))(?:[0-9A-F]{2}\1){4}[0-9A-F]{2}'  # 00:11:22:33:44:55 / 00-11-22-33-44-55
+    r'|(?:[0-9A-F]{4}\.){2}[0-9A-F]{4}'  # 0011.2233.4455
+    r'|[0-9A-F]{12})$',  # 001122334455
+    re.IGNORECASE,
+)
 
 logger = logging.getLogger(PROGRAM_NAME)
 setup_logger(logger)
 
 
-FLAGS_QUIET = ['--quiet', '-q']
-FLAGS_VERBOSE = ['--verbose', '-v']
-
-
 class Host(object):
-    """ Host configuration. """
+    """A network host.
 
-    def __init__(self, schema):
-        self.name = schema['name']
-        self.ip = schema['ip']
-        self.mac = schema['mac']
-        self.port = schema['port']
+    Args:
+        kwargs: Catchall for unknown parameters. This is included to prevent errors instantiating `wake.core.Host`
+            objects from unverified data which may contain unknown "key:value" pairs. All values are silently ignored.
 
-    def create_magic_packet(self):
-        mac = self.mac.replace(':', '')
-        raw = ''.join(['FF' * 6, mac * 20])
-        packet = b''
+    """
+    def __init__(self, name=None, ip=None, mac=None, port=None, **kwargs):
+        self.name = name
+        self.ip = ip
+        self.mac = mac
+        self.port = port
 
-        for i in range(0, len(raw), 2):
-            packet = b''.join([packet, struct.pack('B', int(raw[i : i + 2], 16))])
+    @property
+    def ip(self):
+        """The host IPv4 address. Default is '255.255.255.255'"""
+        return self._ip
+
+    @ip.setter
+    def ip(self, value):
+        self._ip = value or '255.255.255.255'
+
+    @property
+    def mac(self):
+        """The host MAC address, without separators."""
+        return self._mac
+
+    @mac.setter
+    def mac(self, value):
+        try:
+            match = MAC_PATTERN.match(value)
+        except TypeError:
+            match = None
+            value = None
+
+        if match:
+            for char in ('.', '-', ':'):
+                value = value.replace(char, '')
+
+            value = value.upper()
+
+        self._mac = value
+
+    @property
+    def mac_formatted(self):
+        """The host MAC address, with ':' separators."""
+        return ':'.join(self.mac[i:i+2] for i in range(0, 12, 2)) if self.mac else None
+
+    @property
+    def magic_packet(self):
+        """The magic packet that wakes the host."""
+        packet = None
+
+        if self.mac:
+            data = f'{"FF" * 6}{self.mac * 20}'
+            packet = b''
+
+            for i in range(0, len(data), 2):
+                packet = b''.join([packet, struct.pack('B', int(data[i:i+2], 16))])
 
         return packet
 
-    def wake(self):
-        logger.info('Waking host "{0}"'.format(self.name))
-        magic_packet = self.create_magic_packet()
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sock.sendto(magic_packet, (self.ip, self.port))
+    @property
+    def name(self):
+        """The host name."""
+        return self._name
 
-
-class HostSchema(Schema):
-    """ Schema for hosts. """
-
-    name = String(default='', missing='')
-    ip = String(default='255.255.255.255', missing='255.255.255.255')
-    mac = String(default='', missing='')
-    port = Integer(default=9, missing=9)
-
-    @post_load
-    def format_mac(self, data, **kwargs):
-        """ Format a MAC address as 00:11:22:33:44:55. """
-        if '.' in data['mac']:
-            data['mac'] = data['mac'].replace('.', '')
-        elif '-' in data['mac']:
-            data['mac'] = data['mac'].replace('-', ':')
-
-        if len(data['mac']) == 12:
-            data['mac'] = ':'.join(data['mac'][i : i + 2] for i in range(0, 12, 2))
-
-        data['mac'] = data['mac'].upper()
-        return data
-
-    @validates('ip')
-    def validate_ip(self, data, **kwargs):
-        """ Validates an IPv4 address. """
-        try:
-            IPv4Address(data)
-        except AddressValueError:
-            raise ValidationError('"{0}" is not a valid IPv4 address.'.format(data))
-
-    @validates('mac')
-    def validate_mac(self, data, **kwargs):
-        """ Validates a MAC address. """
-        regex = re.compile(
-            r'^(?:(?:[0-9A-F]{2}([-:]))(?:[0-9A-F]{2}\1){4}[0-9A-F]{2}'  # 00:11:22:33:44:55 / 00-11-22-33-44-55
-            r'|(?:[0-9A-F]{4}\.){2}[0-9A-F]{4}'  # 0011.2233.4455
-            r'|[0-9A-F]{12})$',
-            re.IGNORECASE,
-        )  # 001122334455
-
-        if regex.match(data) is None:
-            raise ValidationError('"{0}" is not a valid MAC address.'.format(data))
-
-    @validates('port')
-    def validate_port(self, data, **kwargs):
-        """ Validates a port number. """
-        if not 0 <= data <= 65535:
-            raise ValidationError('"{0}" is not a valid port number.'.format(data))
-
-
-class Configuration(object):
-    """ Container for configuration. """
-
-    filename = '{0}.json'.format(PROGRAM_NAME)
-    paths = ['/usr/local/etc', '/etc']
-    table = {
-        'cols_align': ['l', 'c', 'c', 'c'],
-        'cols_valign': ['m', 'm', 'm', 'm'],
-        'header': ['Hostname', 'MAC Addr', 'IP Addr', 'Port'],
-    }
-
-    def __init__(self):
-        logger.debug('Loading configuration')
-        self._data = self.load(self.get_config())
+    @name.setter
+    def name(self, value):
+        self._name = value or None
 
     @property
-    def data(self):
-        return self._data
+    def port(self):
+        """The host WoL port. Default: is '9'"""
+        return self._port
 
-    def find_host(self, name):
-        return next(
-            (host for host in self.data if host.name.lower() == name.lower()), None
-        )
+    @port.setter
+    def port(self, value):
+        self._port = value or 9
 
-    def get_config_file(self):
-        """ Locate the configuration file to use. """
-        for p in self.paths:
-            file = os.path.join(p, self.filename)
+    @property
+    def summary(self):
+        """A `list` of host properties to use in table displays."""
+        return [self.name, self.mac_formatted, self.ip, self.port]
 
-            logger.debug('Trying configuration file "{0}"'.format(file))
-            if os.path.isfile(file):
-                logger.debug('Configuration file found, using "{0}"'.format(file))
-                return file
-            else:
-                raise click.ClickException('Configuration file not found')
+    def validate(self):
+        """Validate a host.
 
-    def get_config(self):
-        """ Load the configuration file data. """
-        file = self.get_config_file()
-        data = None
+        Call all object methods that begin with '_validate_' to validate host. Validation methods should raise
+        `ValueError` on an error. All errors will be raised together after every validation method has run.
 
-        if file:
-            try:
-                with open(file, mode='rb', encoding='utf-8') as f:
-                    data = json.loads(f.read())
-            except ValueError:
-                raise click.ClickException('Failed to parse configuration file')
-        return data
+        Raises:
+            ValueError: One or more values failed validation.
 
-    def load(self, data):
-        """ Load and validate configuration data against schema. """
-        if data is None:
-            return None
-        elif not isinstance(data, list):
-            raise click.ClickException(
-                'Invalid configuration data, config root must be a list'
-            )
+        """
+        errors = []
 
-        loaded = []
-        schema = HostSchema()
+        for attr in dir(self):
+            if attr.startswith('_validate_') and callable(getattr(self, attr)):
+                try:
+                    getattr(self, attr)()
+                except ValueError as e:
+                    errors.append(str(e))
 
-        for idx, raw_host in enumerate(data):
-            try:
-                schema_host = schema.load(raw_host)
-            except ValidationError as err:
-                error_name = raw_host.get('name', idx)
-                error_msg = '::'.join(
-                    '{0}'.format(v[0]) for k, v in err.messages.items()
-                )
-                logger.warning(
-                    'Invalid host definition "{0}": {1}'.format(error_name, error_msg)
-                )
-            else:
-                loaded.append(Host(schema_host))
+        if errors:
+            raise ValueError(errors)
 
-        if not loaded:
-            raise click.ClickException('There are no valid hosts defined')
+    def _validate_ip(self):
+        try:
+            IPv4Address(self.ip)
+        except AddressValueError:
+            raise ValueError('Invalid IPv4 Address')
 
-        return loaded
+    def _validate_mac(self):
+        if self.mac is None:
+            raise ValueError('Invalid MAC Address')
 
-    def show(self):
-        """ Show all hosts in a nice table. """
-        logger.debug('Creating hosts table')
-        table = Texttable()
-        table.set_cols_align(self.table['cols_align'])
-        table.set_cols_valign(self.table['cols_valign'])
-        table.header(self.table['header'])
+    def _validate_name(self):
+        if self.name is None:
+            raise ValueError('Invalid name')
 
-        for host in self.data:
-            table.add_row([host.name, host.mac, host.ip, host.port])
+    def _validate_port(self):
+        if not 0 <= self.port <= 65535:
+            raise ValueError('Invalid port')
 
-        logger.debug('Displaying hosts table')
-        click.echo(table.draw())
+
+def load_config():
+    """Load the configuration file.
+
+    Returns:
+        A `list` of `wake.core.Host` objects.
+
+    Raises:
+        IOError: A configuration file was not found.
+        ValueError: No valid host definitions were found.
+
+    """
+    logger.debug('Started loading configuration')
+
+    paths = ('', '/usr/local/etc', '/etc')
+
+    config = None
+
+    for path in paths:
+        file = pathlib.Path(path, CONFIG_FILE)
+
+        if file.exists():
+            logger.debug(f'Using configuration file "{file.absolute()}"')
+            config = file
+            break
+
+    if config is None:
+        raise IOError('Stopped loading configuration, configuration file not found')
+
+    data = json.load(file.open())
+
+    hosts = []
+
+    for idx, raw_host in enumerate(data):
+        host = Host(**raw_host)
+
+        try:
+            host.validate()
+        except ValueError as e:
+            logger.warning(f'Invalid host "{raw_host.get("name", f"#{idx+1}")}": {e}')
+            continue
+
+        hosts.append(host)
+
+    if not hosts:
+        raise ValueError('Stopped loading configuration, no valid hosts found')
+
+    logger.debug('Finished loading configuration')
+
+    return hosts
 
 
 class CLIGroup(click.Group):
@@ -236,47 +243,71 @@ def cli(ctx, verbose):
             verbose = False
 
     change_logger_level(logger, verbose)
-    logger.debug('{0} started'.format(PROGRAM_NAME))
+    logger.debug(f'{PROGRAM_NAME} started')
 
     if ctx.invoked_subcommand:
-        ctx.obj = Configuration()
+        ctx.obj = load_config()
 
 
 @cli.command()
-@click.argument('hostnames', nargs=-1, type=click.STRING)
+@click.argument('names', nargs=-1, type=click.STRING)
+@click.option('--all', '-a', 'all_', is_flag=True, default=False, help='Wake all hosts.')
 @click.pass_context
-def host(ctx, hostnames):
-    """ Wake specified hosts. """
-    logger.debug('Checking "hostnames" command line argument')
-    if not hostnames:
-        raise click.UsageError('No host(s) specified')
+def host(ctx, all_, names):
+    """Wake the specified host(s).
 
-    hosts_to_wake = []
+    NAMES: The host name(s) to wake.
 
-    if len(hostnames) == 1 and hostnames[0].lower() == 'all':
-        logger.debug('Waking all {0} defined hosts'.format(len(ctx.obj.data)))
-        hosts_to_wake = ctx.obj.data
+    """
+    logger.debug('Started waking hosts')
+
+    hosts = []
+
+    if all_:
+        if names:
+            raise click.UsageError('"--all" cannot be used with named hosts')
+        else:
+            hosts = ctx.obj
     else:
-        for hostname in hostnames:
-            host = ctx.obj.find_host(hostname)
+        if not names:
+            raise click.UsageError('No host(s) specified')
+
+        for name in names:
+            host = next((host for host in ctx.obj if host.name.lower() == name.lower()), None)
+
             if host is None:
-                logger.warning('Unknown host "{0}"'.format(hostname))
+                logger.warning(f'Unknown host "{name}"')
             else:
-                logger.debug('Found host "{0}"'.format(host.name))
-                hosts_to_wake.append(host)
+                hosts.append(host)
 
-    if not hosts_to_wake:
-        raise click.ClickException('No known hosts to wake')
+    if not hosts:
+        raise ValueError('Stopped waking hosts, no matching hosts found')
 
-    for host in hosts_to_wake:
-        host.wake()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    for host in hosts:
+        logger.info(f'Waking host "{host.name}"')
+        sock.sendto(host.magic_packet, (host.ip, host.port))
+
+    logger.debug('Finished waking hosts')
 
 
 @cli.command()
 @click.pass_context
 def show(ctx):
-    """ Show all defined hosts. """
-    ctx.obj.show()
+    """Show all hosts."""
+    logger.debug('Started showing hosts')
+
+    data = [['Hostname', 'MAC Address', 'IP Address', 'Port']]
+
+    for host in ctx.obj:
+        data.append(host.summary)
+
+    click.echo(f'\n{tabulate(data, headers="firstrow", tablefmt="simple")}')
+
+    logger.debug('Finished showing hosts')
 
 
 def show_exception(self, file=None):
