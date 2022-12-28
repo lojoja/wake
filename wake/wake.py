@@ -165,3 +165,7 @@ class Hosts:
             name: The name of the host to get.
         """
         return next((host for host in self._hosts if host.name.lower() == name.lower()), None)
+
+    def get_all(self) -> list[Host]:
+        """Get all hosts in the collection."""
+        return self._hosts

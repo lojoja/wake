@@ -57,6 +57,7 @@ def test_hosts(host_data: Host | list[Host] | None, count: int):
     hosts = Hosts(host_data)
 
     assert hosts.count == count
+    assert len(hosts.get_all()) == count
 
 
 def test_hosts_add_host():
