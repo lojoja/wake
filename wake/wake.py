@@ -1,3 +1,9 @@
+"""
+wake
+
+A simple wakeonlan implementation.
+"""
+
 from ipaddress import AddressValueError, IPv4Address
 import re
 import struct
@@ -17,7 +23,9 @@ MAC_SEPARATOR = ":"
 class Host:
     """A network host."""
 
-    def __init__(self, name: str = "", mac: str = "", ip: str = "255.255.255.255", port: int = 9):
+    def __init__(
+        self, name: str = "", mac: str = "", ip: str = "255.255.255.255", port: int = 9  #  pylint: disable=c0103
+    ):
         self._name = name
         self._ip = ip
         self._port = port
@@ -32,7 +40,7 @@ class Host:
         self._mac = mac
 
     @property
-    def ip(self) -> str:
+    def ip(self) -> str:  # pylint: disable=c0103
         """The host IPv4 address."""
         return self._ip
 
@@ -79,8 +87,8 @@ class Host:
             if attr.startswith("_validate_") and callable(getattr(self, attr)):
                 try:
                     getattr(self, attr)()
-                except ValueError as e:
-                    errors.append(str(e))
+                except ValueError as exc:
+                    errors.append(str(exc))
 
         if errors:
             raise ValueError(errors)
@@ -88,8 +96,8 @@ class Host:
     def _validate_ip(self) -> None:
         try:
             IPv4Address(self.ip)
-        except AddressValueError:
-            raise ValueError("Invalid IPv4 Address")
+        except AddressValueError as exc:
+            raise ValueError("Invalid IPv4 Address") from exc
 
     def _validate_mac(self) -> None:
         match = MAC_PATTERN.match(self._mac)

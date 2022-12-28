@@ -1,3 +1,5 @@
+# pylint: disable=c0114,c0116
+
 import pytest
 
 from wake import Host, Hosts
@@ -40,7 +42,7 @@ def test_host_mac_format(mac: str):
         ("foo", "AA:BB:CC:00:11:22", "127.0.0.x", -1, False),
     ],
 )
-def test_host_validation(name: str, mac: str, ip: str, port: int, valid: bool):
+def test_host_validation(name: str, mac: str, ip: str, port: int, valid: bool):  # pylint: disable=c0103
     host = Host(name, mac, ip, port)
 
     if valid:
