@@ -7,7 +7,7 @@ A simple wakeonlan implementation for waking defined hosts.
 Requirements
 ------------
 
-* Python 3.9.x
+* Python 3.10.x
 
 
 Installation
