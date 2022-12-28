@@ -73,7 +73,7 @@ def test_hosts_get_host(name: str, search_name: str, expect_type: Host | None):
 
     result = hosts.get(search_name)
 
-    assert type(result) == type(expect_type)
+    assert isinstance(result, type(expect_type))
 
 
 def test_hosts_table():
