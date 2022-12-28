@@ -45,7 +45,7 @@ target_version = ['py310']
 include = '\.pyi?$'
 
 [tool.coverage.run]
-source = ['triex']
+source = ['wake']
 omit = ['tests/']
 
 [tool.coverage.report]
