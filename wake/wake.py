@@ -11,9 +11,6 @@ import typing as t
 
 from tabulate import tabulate
 
-# 00:11:22:33:44:55 / 00-11-22-33-44-55
-# 0011.2233.4455
-# 001122334455
 
 MAC_PATTERN = re.compile(r"^(?:[0-9A-F]{2}([:]))(?:[0-9A-F]{2}\1){4}[0-9A-F]{2}", re.IGNORECASE)
 MAC_REPLACE = [".", "-", ":"]
@@ -35,7 +32,8 @@ class Host:
             if char in mac:
                 mac = mac.replace(char, "")
 
-        mac = MAC_SEPARATOR.join(mac[i : i + 2] for i in range(0, 12, 2))
+        if len(mac) == 12:
+            mac = MAC_SEPARATOR.join(mac[i : i + 2] for i in range(0, 12, 2))
 
         self._mac = mac
 

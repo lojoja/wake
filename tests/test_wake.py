@@ -25,6 +25,7 @@ def test_host():
 @pytest.mark.parametrize(
     ["mac"],
     [("aa:bb:cc:00:11:22",), ("aa-bb-cc-00-11-22",), ("aa.bb.cc.00.11.22",), ("aabb.cc00.1122",), ("aabbcc001122",)],
+    ids=[": separator", "- separator", ". separator (2)", ". separator (4)", "no separator"],
 )
 def test_host_mac_format(mac: str):
     host = Host(mac=mac)
@@ -38,9 +39,11 @@ def test_host_mac_format(mac: str):
         ("foo", "AA:BB:CC:00:11:22", "127.0.0.1", 9, True),
         ("", "AA:BB:CC:00:11:22", "127.0.0.1", 9, False),
         ("foo", "ZZ:BB:CC:00:11:22", "127.0.0.1", 9, False),
+        ("foo", "AA:BB:CC:00:11:22A", "127.0.0.1", 9, False),
         ("foo", "AA:BB:CC:00:11:22", "127.0.0.x", 9, False),
         ("foo", "AA:BB:CC:00:11:22", "127.0.0.x", -1, False),
     ],
+    ids=["valid", "invalid name", "invalid mac (char)", "invalid mac (length)", "invalid ip", "invalid port"],
 )
 def test_host_validation(name: str, mac: str, ip: str, port: int, valid: bool):  # pylint: disable=c0103
     host = Host(name, mac, ip, port)
@@ -52,7 +55,11 @@ def test_host_validation(name: str, mac: str, ip: str, port: int, valid: bool): 
             host.validate()
 
 
-@pytest.mark.parametrize(["host_data", "count"], [(None, 0), (Host(), 1), ([Host(), Host()], 2)])
+@pytest.mark.parametrize(
+    ["host_data", "count"],
+    [(Host(), 1), ([Host(), Host()], 2), (None, 0)],
+    ids=["one host", "multiple hosts", "no hosts"],
+)
 def test_hosts(host_data: Host | list[Host] | None, count: int):
     hosts = Hosts(host_data)
 
@@ -67,7 +74,11 @@ def test_hosts_add_host():
     assert hosts.count == 1
 
 
-@pytest.mark.parametrize(["name", "search_name", "expect_type"], [("foo", "foo", Host()), ("foo", "bar", None)])
+@pytest.mark.parametrize(
+    ["name", "search_name", "expect_type"],
+    [("foo", "foo", Host()), ("foo", "bar", None)],
+    ids=["host found", "host not found"],
+)
 def test_hosts_get_host(name: str, search_name: str, expect_type: Host | None):
     host = Host(name=name)
     hosts = Hosts(host)
