@@ -1,88 +1,89 @@
-wake
-====
+# wake
 
 A simple wakeonlan implementation for waking defined hosts.
 
 
-Requirements
-------------
+## Requirements
 
 * Python 3.10.x
 
 
-Installation
-------------
+## Installation
+
+### Local
 
 ```
-pip install git+https://github.com/lojoja/wake.git
+pip install --trusted-host=gitea.lojoja.com --extra-index-url=https://gitea.lojoja.com/api/packages/lojoja/pypi/simple wake
+```
+
+### Remote
+
+```
+pip install git+ssh://github.com/lojoja/wake@main
 ```
 
 
-Use
----
+## Usage
+
+```
+Usage: wake [OPTIONS] COMMAND [ARGS]...
+
+  A simple wakeonlan implementation.
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  host  Wake the specified host(s).
+  show  Show all hosts.
+```
+
+### Examples
 
 Wake a specific host:
 
 ```
-wake host myhost
+> wake host myhost
 ```
 
 Wake all hosts:
 
 ```
-wake host --all
+> wake host --all
 ```
 
 Show hosts:
 
 ```
-wake show
-```
-
-Increase verbosity:
-
-```
-wake host myhost --verbose
-```
-
-Decrease verbosity:
-
-```
-wake host myhost --quiet
+> wake show
 ```
 
 
-Configure
----------
+## Configure
 
-Copy `/usr/local/etc/wake.example.json` to `/usr/local/etc/wake.json` and add entries for each remote host.
+Hosts should be defined in the file `~/.config/wake.toml`. Every host must have a `name` and `mac` value; `ip` and `port` are optional. `ip` is an IPv4 address. Optional valid MAC address separators are `:`, `-`, and `.`. The number of characters between separators does not matter. Example formats:
 
-Every host must have a `name` and `mac` value; `ip` and `port` are optional. `ip` is an IPv4 address. `mac` can be formatted as follows:
+- AA:00:BB:11:CC:22
+- AA-00-BB-11-CC-22
+- AA00.BB11.CC22
+- AA00BB11CC22
 
-- 00:11:22:33:44:55
-- 00-11-22-33-44-55
-- 0011.2233.4455
-- 001122334455
-
-Example:
+Example configuration:
 
 ```
-[
-    {
-        "name": "myhost",
-        "mac": "AABBCCDDEEFF"
-    },
-    {
-        "name": "myotherhost",
-        "mac": "00:11:22:33:44:55",
-        "ip": "255.255.255.255",
-        "port": 7
-    }
-]
+[[ hosts ]]
+name = "myhost"
+mac = "AABBCCDDEEFF"
+
+[[ hosts ]]
+name = "myotherhost"
+mac = "00:11:22:33:44:55"
+ip = "255.255.255.255"
+port = 7
 ```
 
 
-License
--------
+## License
 
 Wake is released under the [MIT License](./LICENSE)
