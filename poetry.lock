@@ -106,7 +106,7 @@ click = ">=8,<9"
 [package.source]
 type = "legacy"
 url = "https://gitea.lojoja.com/api/packages/lojoja/pypi/simple"
-reference = 'lojoja'
+reference = "lojoja"
 
 [[package]]
 name = "colorama"
@@ -470,6 +470,24 @@ pytest = ">=4.6"
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
+name = "pytest-mock"
+version = "3.10.0"
+description = "Thin-wrapper around the mock package for easier use with pytest"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pytest-mock-3.10.0.tar.gz", hash = "sha256:fbbdb085ef7c252a326fd8cdcac0aa3b1333d8811f131bdcc701002e1be7ed4f"},
+    {file = "pytest_mock-3.10.0-py3-none-any.whl", hash = "sha256:f4c973eeae0282963eb293eb173ce91b091a79c1334455acfac9ddee8a1c784b"},
+]
+
+[package.dependencies]
+pytest = ">=5.0"
+
+[package.extras]
+dev = ["pre-commit", "pytest-asyncio", "tox"]
+
+[[package]]
 name = "tabulate"
 version = "0.9.0"
 description = "Pretty-print tabular data"
@@ -584,5 +602,5 @@ files = [
 
 [metadata]
 lock-version = "2.0"
-python-versions = '^3.10.0'
-content-hash = "986e0701a50aed1526a4fe7c416babe21e11c3fc38589618c3fa7934627c77f4"
+python-versions = "^3.10.0"
+content-hash = "fffe8d26f95747d710a2845195f4ec710328bafcb889b417a2034f4990fecd40"

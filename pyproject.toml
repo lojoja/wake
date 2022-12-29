@@ -34,10 +34,14 @@ flake8 = "^6.0.0"
 pylint = "^2.0.0"
 pytest = "^7.0.0"
 pytest-cov = "^3.0.0"
+pytest-mock = "^3.10.0"
 
 [[tool.poetry.source]]
 name = "lojoja"
 url = "https://gitea.lojoja.com/api/packages/lojoja/pypi/simple"
+
+[tool.poetry.scripts]
+wake = 'wake.cli:cli'
 
 [tool.black]
 line-length = 120
