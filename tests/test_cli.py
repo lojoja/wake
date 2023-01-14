@@ -57,14 +57,14 @@ def fixture_config_file(tmp_path: pathlib.Path):
 
 
 @pytest.mark.parametrize(
-    ["args", "output", "exit_code", "socket_exit_code"],
+    ["args", "output", "socket_side_effect", "exit_code"],
     [
-        (["--all"], 'Waking host "foo"\nWaking host "bar"\n', 0, 0),
-        (["--all", "foo"], "--all cannot be used with named hosts\n", 2, 0),
-        (["xyz"], 'Unknown host "xyz"\n', 0, 0),
-        (["xyz"], "No hosts to wake\n", 0, 0),
-        (["foo"], 'Waking host "foo"\n', 0, 0),
-        (["foo"], "Failed to send magic packet\n", 1, 1),
+        (["--all"], 'Waking host "foo"\nWaking host "bar"\n', None, 0),
+        (["--all", "foo"], "--all cannot be used with named hosts\n", None, 2),
+        (["xyz"], 'Unknown host "xyz"\n', None, 0),
+        (["xyz"], "No hosts to wake\n", None, 0),
+        (["foo"], 'Waking host "foo"\n', None, 0),
+        (["foo"], "Failed to send magic packet\n", OSError, 1),
     ],
     ids=[
         "wake all hosts",
@@ -80,10 +80,10 @@ def test_cli_host(
     config_file: pathlib.Path,
     args: list[str],
     output: str,
+    socket_side_effect: t.Optional[Exception],
     exit_code: int,
-    socket_exit_code: int,
 ):  # pylint: disable=too-many-arguments
-    mocker.patch("wake.cli.socket.socket.sendto", return_value=socket_exit_code)
+    mocker.patch("wake.cli.socket.socket.sendto", return_value=102, side_effect=socket_side_effect)
 
     runner = CliRunner()
     result = runner.invoke(wake.cli.cli, ["--config", str(config_file), "host", *args])

@@ -83,13 +83,13 @@ def host(hosts: Hosts, all_: bool, names: tuple[str]) -> None:
 
     NAMES: The host name(s) to wake.
     """
-    wake_hosts: list[Host] = []
+    hosts_to_wake: list[Host] = []
 
     if all_ and names:
         raise click.BadOptionUsage("all", "--all cannot be used with named hosts")
 
     if all_:
-        wake_hosts = hosts.get_all()
+        hosts_to_wake = hosts.get_all()
     else:
         for name in names:
             defined_host: t.Optional[Host] = hosts.get(name)
@@ -98,22 +98,22 @@ def host(hosts: Hosts, all_: bool, names: tuple[str]) -> None:
                 logger.warning('Unknown host "%s"', name)
                 continue
 
-            wake_hosts.append(defined_host)
+            hosts_to_wake.append(defined_host)
 
-    if not wake_hosts:
+    if not hosts_to_wake:
         logger.warning("No hosts to wake")
         return
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-    for wake_host in wake_hosts:
-        logger.info('Waking host "%s"', wake_host.name)
-        result_code = sock.sendto(wake_host.magic_packet, (wake_host.ip, wake_host.port))
+        for target in hosts_to_wake:
+            logger.info('Waking host "%s"', target.name)
 
-        if result_code > 0:
-            raise click.ClickException("Failed to send magic packet")
+            try:
+                sock.sendto(target.magic_packet, (target.ip, target.port))
+            except OSError as exc:
+                raise click.ClickException("Failed to send magic packet") from exc
 
 
 @cli.command(cls=ClickextCommand)
