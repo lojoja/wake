@@ -6,7 +6,6 @@ A simple wakeonlan implementation.
 
 from ipaddress import AddressValueError, IPv4Address
 import re
-import struct
 import typing as t
 
 from tabulate import tabulate
@@ -62,11 +61,8 @@ class Host:
         """The host magic packet."""
 
         mac = self.mac.replace(MAC_SEPARATOR, "")
-        data = f'{"FF" * 6}{mac * 20}'
-        packet = b""
-
-        for i in range(0, len(data), 2):
-            packet = b"".join([packet, struct.pack("B", int(data[i : i + 2], 16))])
+        data = f'{"FF" * 6}{mac * 16}'
+        packet = bytes.fromhex(data)
 
         return packet
 
