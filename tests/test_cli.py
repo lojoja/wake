@@ -1,54 +1,43 @@
 # pylint: disable=missing-function-docstring,missing-module-docstring
 
+import pathlib
+import typing as t
+
 from click.testing import CliRunner
 import pytest
+import pytest_mock
 
 from wake import Host, Hosts
 import wake.cli  # import the module to allow monkeypatching
 
 
-def test_config_read_error(capsys, mocker):
-    mocker.patch("wake.cli.pathlib.Path.read_text", side_effect=IOError)
-
-    result = wake.cli.get_config()
-    captured = capsys.readouterr()
-
-    assert "Failed" in captured.err
-    assert isinstance(result, Hosts)
-    assert result.count == 0
-
-
-def test_config_parse_error(mocker):
-    mocker.patch("wake.cli.pathlib.Path.read_text", return_value="[[hosts]]\nfoo=bar\n")
-
-    with pytest.raises(ValueError):
-        wake.cli.get_config()
-
-
 @pytest.mark.parametrize(
-    ["hosts", "message", "count"],
+    ["parsed", "count", "output"],
     [
-        ('[[hosts]]\nname="foo"\nmac="00:11:22:33:44:55"\n', "", 1),
-        ('[[hosts]]\nname="foo"\nport=1\nmac="ZZ:11:22:33:44:55"', "Invalid", 0),
-        ('[[hosts]]\nname="foo"\nmac="00:11:22:33:44:55"\nx=0\n', "Unknown", 1),
+        (None, 0, "No hosts defined"),
+        ({"x": []}, 0, "No hosts defined"),
+        ({"hosts": [{"name": "foo", "mac": "00:11:22:33:44:55"}]}, 1, ""),
+        ({"hosts": [{"name": "foo", "mac": "ZZ:11:22:33:44:55"}]}, 0, "Invalid host (foo):"),
+        ({"hosts": [{"name": "foo", "mac": "00:11:22:33:44:55", "x": 0}]}, 1, "Unknown property (foo): x"),
     ],
-    ids=["valid configuration", "valid configuration", "unknown property"],
+    ids=["no data", "missing host key", "valid configuration", "invalid configuration", "unknown property"],
 )
-def test_config_parse(capsys, mocker, hosts: dict[str, str | int], message: str, count: int):  # pylint: disable=w0621
-    mocker.patch("wake.cli.pathlib.Path.read_text", return_value=hosts)
-
-    result = wake.cli.get_config()
+def test_build_hosts(
+    capsys: pytest.CaptureFixture,
+    parsed: t.Optional[dict[str, t.Any]],
+    count: int,
+    output: str,
+):
+    result = wake.cli.build_hosts(parsed)
     captured = capsys.readouterr()
 
-    if message:
-        assert message in captured.err
-
-    assert isinstance(result, Hosts)
+    if output:
+        assert output in captured.err
     assert result.count == count
 
 
-@pytest.fixture
-def hosts():
+@pytest.fixture(name="hosts")
+def fixture_hosts():
     data = [
         Host(name="foo", mac="00:11:22:33:44:55"),
         Host(name="bar", mac="AA:BB:CC:DD:EE:FF"),
@@ -56,40 +45,55 @@ def hosts():
     return Hosts(data)
 
 
+@pytest.fixture(name="config_file")
+def fixture_config_file(tmp_path: pathlib.Path):
+    data = '[[ hosts ]]\nname = "foo"\nmac = "00:11:22:33:44:55"\n\n'
+    data += '[[ hosts ]]\nname = "bar"\nmac = "AA:BB:CC:DD:EE:FF"\n'
+
+    file = tmp_path / "config.toml"
+    file.write_text(data)
+
+    return file
+
+
 @pytest.mark.parametrize(
-    ["args", "message", "exit_code", "socket_return"],
+    ["args", "output", "exit_code", "socket_exit_code"],
     [
-        (["host", "--all"], "Waking", 0, 0),
-        (["host", "--all", "foo"], "named hosts", 2, 0),
-        (["host", "xyz"], "Unknown", 0, 0),
-        (["host", "xyz"], "No hosts", 0, 0),
-        (["host", "foo"], "Waking", 0, 0),
-        (["host", "foo"], "Failed", 1, 1),
+        (["--all"], 'Waking host "foo"\nWaking host "bar"\n', 0, 0),
+        (["--all", "foo"], "--all cannot be used with named hosts\n", 2, 0),
+        (["xyz"], 'Unknown host "xyz"\n', 0, 0),
+        (["xyz"], "No hosts to wake\n", 0, 0),
+        (["foo"], 'Waking host "foo"\n', 0, 0),
+        (["foo"], "Failed to send magic packet\n", 1, 1),
     ],
     ids=[
         "wake all hosts",
-        "mutually exclusive options",
+        "mutually exclusive parameters",
         "unknown host name",
         "no hosts to wake",
         "waking host",
         "socket fail",
     ],
 )
-def test_cli_host(mocker, hosts, args, message, exit_code, socket_return):  # pylint: disable=r0913,w0621
-    mocker.patch("wake.cli.get_config", return_value=hosts)
-    mocker.patch("wake.cli.socket.socket.sendto", return_value=socket_return)
+def test_cli_host(
+    mocker: pytest_mock.MockerFixture,
+    config_file: pathlib.Path,
+    args: list[str],
+    output: str,
+    exit_code: int,
+    socket_exit_code: int,
+):  # pylint: disable=too-many-arguments
+    mocker.patch("wake.cli.socket.socket.sendto", return_value=socket_exit_code)
 
     runner = CliRunner()
-    result = runner.invoke(wake.cli.cli, args)
+    result = runner.invoke(wake.cli.cli, ["--config", str(config_file), "host", *args])
 
     assert result.exit_code == exit_code
-    assert message in result.output
+    assert output in result.output
 
 
-def test_cli_show(mocker, hosts):  # pylint: disable=w0621
-    mocker.patch("wake.cli.get_config", return_value=hosts)
-
+def test_cli_show(config_file: pathlib.Path, hosts: Hosts):
     runner = CliRunner()
-    result = runner.invoke(wake.cli.cli, ["show"])
+    result = runner.invoke(wake.cli.cli, ["--config", str(config_file), "show"])
 
     assert result.output == f"\n{hosts.table}\n"

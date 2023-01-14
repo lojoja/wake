@@ -10,49 +10,75 @@ import socket
 import typing as t
 
 import click
-from clickext import DebugCommonOptionGroup
-import tomli
+from clickext import ClickextCommand, ClickextGroup, config_option, init_logging, verbose_option
 
-from wake import Host, Hosts
+from .wake import Host, Hosts
 
 
 CONFIG_FILE = pathlib.Path("~/.config/wake.toml").expanduser()
 CONFIG_HOST_PROPERTIES = ["name", "mac", "ip", "port"]
 
 logger = logging.getLogger(__package__)
+init_logging(logger)
 
 
-class LazyConfigGroup(DebugCommonOptionGroup):
-    """A lazy-loading configuration command group.
+def build_hosts(data: t.Optional[dict[str, list[dict[str, t.Union[str, int]]]]]) -> Hosts:
+    """Create hosts from configuration file data.
 
-    Checks for presence of the --help or --version option before invoking command and stores the result in
-    `click.Context.obj`. This value is used in the entry point to prevent loading the configuration when the program
-    will not be run.
+    Arguments:
+        data: The parsed configuration file data.
+
+    Raises:
+        ValueError: When the configuration file could not be parsed.
     """
 
-    def invoke(self, ctx):
-        ctx.obj = any(value in ctx.args for value in ["--help", "--version"])
-        return super().invoke(ctx)
+    hosts = Hosts()
+
+    if data is None or "hosts" not in data:
+        logger.warning("No hosts defined")
+        return hosts
+
+    count = len(data["hosts"])
+
+    for idx, host_data in enumerate(data["hosts"]):
+        num = idx + 1
+        name = host_data.get("name", f"#{num}")
+
+        logger.debug("Configuring host %s of %s", num, count)
+
+        unknown_props = set(host_data.keys()).difference(CONFIG_HOST_PROPERTIES)
+
+        for prop in unknown_props:
+            del host_data[prop]
+            logger.warning("Unknown property (%s): %s", name, prop)
+
+        host_obj = Host(**host_data)
+
+        try:
+            host_obj.validate()
+        except ValueError as exc:
+            logger.warning("Invalid host (%s): %s", name, exc)
+            continue
+
+        hosts.add(host_obj)
+
+    return hosts
 
 
-@click.group(cls=LazyConfigGroup)
+@click.group(cls=ClickextGroup, global_opts=["config", "verbose"])
 @click.version_option()
-@click.pass_context
-def cli(ctx: click.Context) -> None:
+@config_option(CONFIG_FILE, processor=build_hosts)
+@verbose_option(logger)
+def cli() -> None:
     """A simple wakeonlan implementation."""
     logger.debug("%s started", __package__)
 
-    if not ctx.invoked_subcommand or ctx.obj:
-        return
 
-    ctx.obj = get_config()
-
-
-@cli.command()
+@cli.command(cls=ClickextCommand)
 @click.option("--all", "-a", "all_", is_flag=True, default=False, help="Wake all hosts.")
 @click.argument("names", nargs=-1, type=click.STRING)
 @click.pass_obj
-def host(hosts: Hosts, all_: bool, names: tuple[str], debug: bool) -> None:  # pylint: disable=w0613
+def host(hosts: Hosts, all_: bool, names: tuple[str]) -> None:
     """Wake the specified host(s).
 
     NAMES: The host name(s) to wake.
@@ -90,52 +116,8 @@ def host(hosts: Hosts, all_: bool, names: tuple[str], debug: bool) -> None:  # p
             raise click.ClickException("Failed to send magic packet")
 
 
-@cli.command()
+@cli.command(cls=ClickextCommand)
 @click.pass_obj
-def show(hosts: Hosts, debug: bool) -> None:  # pylint: disable=w0613
+def show(hosts: Hosts) -> None:
     """Show all hosts."""
     click.echo(f"\n{hosts.table}")
-
-
-def get_config() -> Hosts:
-    """Get the program configuration.
-
-    Raises:
-        ValueError: When the configuration file could not be parsed.
-    """
-    config: dict[str, list[dict[str, str | int]]] = {"hosts": []}
-
-    try:
-        config = tomli.loads(CONFIG_FILE.read_text(encoding="utf8"))
-    except IOError:
-        logger.warning("Failed to read configuration file")
-    except (tomli.TOMLDecodeError) as exc:
-        raise ValueError("Invalid configuration file") from exc
-
-    hosts = Hosts()
-
-    config_host_count = len(config["hosts"])
-
-    for idx, config_host in enumerate(config["hosts"]):
-        config_host_num = idx + 1
-        config_host_name = config_host.get("name", "") or config_host_num
-
-        logger.debug("Configuring host %s of %s", config_host_num, config_host_count)
-
-        unknown_props = set(config_host.keys()).difference(CONFIG_HOST_PROPERTIES)
-
-        for prop in unknown_props:
-            del config_host[prop]
-            logger.warning("Unknown property (%s): %s", config_host_name, prop)
-
-        host_obj = Host(**config_host)
-
-        try:
-            host_obj.validate()
-        except ValueError as exc:
-            logger.warning("Invalid host (%s): %s", config_host_name, exc)
-            continue
-
-        hosts.add(host_obj)
-
-    return hosts
