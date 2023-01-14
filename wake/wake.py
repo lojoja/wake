@@ -21,7 +21,7 @@ class Host:
     """A network host."""
 
     def __init__(
-        self, name: str = "", mac: str = "", ip: str = "255.255.255.255", port: int = 9  #  pylint: disable=c0103
+        self, name: str = "", mac: str = "", ip: str = "255.255.255.255", port: int = 9  # pylint: disable=invalid-name
     ):
         self._name = name
         self._ip = ip
@@ -38,7 +38,7 @@ class Host:
         self._mac = mac
 
     @property
-    def ip(self) -> str:  # pylint: disable=c0103
+    def ip(self) -> str:  # pylint: disable=invalid-name
         """The host IPv4 address."""
         return self._ip
 

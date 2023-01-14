@@ -1,4 +1,4 @@
-# pylint: disable=c0114,c0116
+# pylint: disable=missing-function-docstring,missing-module-docstring
 
 from click.testing import CliRunner
 import pytest

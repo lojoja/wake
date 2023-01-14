@@ -1,4 +1,6 @@
-# pylint: disable=c0114,c0116
+# pylint: disable=missing-function-docstring,missing-module-docstring
+
+import typing as t
 
 import pytest
 
@@ -45,7 +47,7 @@ def test_host_mac_format(mac: str):
     ],
     ids=["valid", "invalid name", "invalid mac (char)", "invalid mac (length)", "invalid ip", "invalid port"],
 )
-def test_host_validation(name: str, mac: str, ip: str, port: int, valid: bool):  # pylint: disable=c0103
+def test_host_validation(name: str, mac: str, ip: str, port: int, valid: bool):  # pylint: disable=invalid-name
     host = Host(name, mac, ip, port)
 
     if valid:
@@ -60,7 +62,7 @@ def test_host_validation(name: str, mac: str, ip: str, port: int, valid: bool): 
     [(Host(), 1), ([Host(), Host()], 2), (None, 0)],
     ids=["one host", "multiple hosts", "no hosts"],
 )
-def test_hosts(host_data: Host | list[Host] | None, count: int):
+def test_hosts(host_data: t.Optional[Host | list[Host]], count: int):
     hosts = Hosts(host_data)
 
     assert hosts.count == count
@@ -79,7 +81,7 @@ def test_hosts_add_host():
     [("foo", "foo", Host()), ("foo", "bar", None)],
     ids=["host found", "host not found"],
 )
-def test_hosts_get_host(name: str, search_name: str, expect_type: Host | None):
+def test_hosts_get_host(name: str, search_name: str, expect_type: t.Optional[Host]):
     host = Host(name=name)
     hosts = Hosts(host)
 

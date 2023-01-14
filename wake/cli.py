@@ -7,6 +7,7 @@ The command-line interface for wake
 import logging
 import pathlib
 import socket
+import typing as t
 
 import click
 from clickext import DebugCommonOptionGroup
@@ -65,7 +66,7 @@ def host(hosts: Hosts, all_: bool, names: tuple[str], debug: bool) -> None:  # p
         wake_hosts = hosts.get_all()
     else:
         for name in names:
-            defined_host: Host | None = hosts.get(name)
+            defined_host: t.Optional[Host] = hosts.get(name)
 
             if defined_host is None:
                 logger.warning('Unknown host "%s"', name)
