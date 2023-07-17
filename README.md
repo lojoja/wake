@@ -5,21 +5,16 @@ A simple wakeonlan implementation for waking defined hosts.
 
 ## Requirements
 
-* Python 3.10.x
+* Python 3.10.x, 3.11.x
+* Linux / macOS
+
+**Note:** wake is not tested on Windows.
 
 
 ## Installation
 
-### Local
-
 ```
-pip install --trusted-host=gitea.lojoja.com --extra-index-url=https://gitea.lojoja.com/api/packages/lojoja/pypi/simple wake
-```
-
-### Remote
-
-```
-pip install git+ssh://github.com/lojoja/wake@main
+pip install py-wake-cli
 ```
 
 

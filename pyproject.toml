@@ -11,15 +11,20 @@ license = "MIT"
 authors = [
   "lojoja <dev@lojoja.com>"
 ]
-homepage = "https://gitea.lojoja.com/lojoja/wake"
-repository = "https://gitea.lojoja.com/lojoja/wake"
-documentation = "https://gitea.lojoja.com/lojoja/wake"
+packages = [
+    {include = "wake"}
+]
+homepage = "https://github.com/lojoja/wake"
+repository = "https://github.com/lojoja/wake"
 classifiers = [
-  "Development Status :: 4 - Beta",
-  "License :: OSI Approved :: MIT License",
+  "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
 ]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/lojoja/wake/issues"
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
