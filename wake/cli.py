@@ -68,7 +68,7 @@ def build_hosts(data: t.Optional[dict[str, list[_HostData]]]) -> Hosts:
 
 
 @click.group(cls=ClickextGroup, global_opts=["config", "verbose"])
-@click.version_option()
+@click.version_option(package_name="py_wake_cli")
 @config_option(CONFIG_FILE, processor=build_hosts)
 @verbose_option(logger)
 def cli() -> None:
