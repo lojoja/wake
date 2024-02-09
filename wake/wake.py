@@ -26,15 +26,7 @@ class Host:
         self._ip = ip
         self._port = port
         self._validated: bool = False
-
-        for char in MAC_REPLACE:
-            if char in mac:
-                mac = mac.replace(char, "")
-
-        if len(mac) == 12:
-            mac = MAC_SEPARATOR.join(mac[i : i + 2] for i in range(0, 12, 2))
-
-        self._mac = mac
+        self._mac = self._format_mac(mac)
 
     @property
     def ip(self) -> str:  # pylint: disable=invalid-name
@@ -86,6 +78,16 @@ class Host:
 
         if errors:
             raise ValueError(errors)
+
+    def _format_mac(self, value: str) -> str:
+        for char in MAC_REPLACE:
+            if char in value:
+                value = value.replace(char, "")
+
+        if len(value) == 12:
+            value = MAC_SEPARATOR.join(value[i : i + 2] for i in range(0, 12, 2))
+
+        return value
 
     def _validate_ip(self) -> None:
         try:
