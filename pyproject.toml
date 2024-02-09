@@ -65,6 +65,9 @@ show_missing = true
 ignore-paths = [".*/.venv/.*.py", "dist/.*.py"]
 load-plugins = ["pylint.extensions.mccabe"]
 
+[tool.pylint.basic]
+good-names = ["ip"]
+
 [tool.pylint.design]
 max-complexity = 15
 

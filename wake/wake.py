@@ -19,9 +19,7 @@ MAC_SEPARATOR = ":"
 class Host:
     """A network host."""
 
-    def __init__(
-        self, name: str = "", mac: str = "", ip: str = "255.255.255.255", port: int = 9  # pylint: disable=invalid-name
-    ):
+    def __init__(self, name: str = "", mac: str = "", ip: str = "255.255.255.255", port: int = 9):
         self._name = name
         self._ip = ip
         self._port = port
@@ -29,7 +27,7 @@ class Host:
         self._mac = self._format_mac(mac)
 
     @property
-    def ip(self) -> str:  # pylint: disable=invalid-name
+    def ip(self) -> str:
         """The host IPv4 address."""
         return self._ip
 
