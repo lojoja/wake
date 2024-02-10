@@ -43,7 +43,10 @@ def build_hosts(data: t.Optional[dict[str, list[HostData]]]) -> Hosts:
 
     for idx, host_data in enumerate(data["hosts"]):
         num = idx + 1
-        name = host_data.get("name", f"#{num}")
+        name = host_data.get("name", "")
+
+        if not name:
+            name = f"#{num}"
 
         logger.debug("Configuring host %s of %s", num, count)
 
