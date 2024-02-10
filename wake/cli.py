@@ -5,7 +5,7 @@ The command-line interface for wake
 """
 
 import logging
-import pathlib
+from pathlib import Path
 import socket
 import typing as t
 
@@ -17,7 +17,7 @@ from .wake import Host, Hosts
 
 HostData = t.TypedDict("HostData", {"name": str, "mac": str, "ip": str, "port": int})
 
-CONFIG_FILE = pathlib.Path("~/.config/wake.toml").expanduser()
+CONFIG_FILE = Path("~/.config/wake.toml").expanduser()
 CONFIG_HOST_PROPERTIES = ["name", "mac", "ip", "port"]
 
 logger = logging.getLogger(__package__)
