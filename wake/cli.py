@@ -15,7 +15,7 @@ from clickext import ClickextCommand, ClickextGroup, config_option, init_logging
 from .wake import Host, Hosts
 
 
-_HostData = t.TypedDict("_HostData", {"name": str, "mac": str, "ip": str, "port": int})
+HostData = t.TypedDict("HostData", {"name": str, "mac": str, "ip": str, "port": int})
 
 CONFIG_FILE = pathlib.Path("~/.config/wake.toml").expanduser()
 CONFIG_HOST_PROPERTIES = ["name", "mac", "ip", "port"]
@@ -24,7 +24,7 @@ logger = logging.getLogger(__package__)
 init_logging(logger)
 
 
-def build_hosts(data: t.Optional[dict[str, list[_HostData]]]) -> Hosts:
+def build_hosts(data: t.Optional[dict[str, list[HostData]]]) -> Hosts:
     """Create hosts from configuration file data.
 
     Arguments:
@@ -93,7 +93,7 @@ def host(hosts: Hosts, all_: bool, names: tuple[str]) -> None:
         hosts_to_wake = hosts.get_all()
     else:
         for name in names:
-            defined_host: t.Optional[Host] = hosts.get(name)
+            defined_host = hosts.get(name)
 
             if defined_host is None:
                 logger.warning('Unknown host "%s"', name)
