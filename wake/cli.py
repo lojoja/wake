@@ -33,7 +33,6 @@ def build_hosts(data: t.Optional[dict[str, list[_HostData]]]) -> Hosts:
     Raises:
         ValueError: When the configuration file could not be parsed.
     """
-
     hosts = Hosts()
 
     if data is None or "hosts" not in data:

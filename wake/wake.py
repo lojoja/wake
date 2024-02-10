@@ -49,7 +49,6 @@ class Host:
     @property
     def magic_packet(self) -> bytes:
         """The host magic packet."""
-
         mac = self.mac.replace(MAC_SEPARATOR, "")
         data = f'{"FF" * 6}{mac * 16}'
         packet = bytes.fromhex(data)
