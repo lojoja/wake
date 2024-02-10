@@ -1,6 +1,7 @@
 # pylint: disable=missing-module-docstring,missing-function-docstring
 
 from pathlib import Path
+
 import pytest
 
 from wake.wake import Host, Hosts
