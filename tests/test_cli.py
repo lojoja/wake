@@ -66,7 +66,7 @@ def test_host(mocker: MockerFixture, config: Path, hosts: Hosts, all_hosts: bool
         arg = "-a" if short_opts else "--all"
     else:
         arg = target_hosts[0].name
-        del target_hosts[-1]
+        target_hosts = target_hosts[0:-1]
 
     runner = CliRunner()
     result = runner.invoke(cli, ["-c", str(config), "host", arg])
