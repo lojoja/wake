@@ -64,8 +64,7 @@ class Host:
         Call all object methods that begin with '_validate_' to validate host. Validation methods should raise
         `ValueError` on an error. All errors will be raised together after every validation method has run.
 
-        Raises:
-            ValueError: One or more values failed validation.
+        :raises ValueError: One or more values failed validation.
         """
         errors = []
 
@@ -112,18 +111,14 @@ class Host:
 class Hosts:
     """A collection of network hosts.
 
-    Attributes:
-        _hosts: The hosts in the collection.
-        _columns: The names of the columns for the hosts table.
-        _fields: The `Host` attributes for each column in the hosts table.
-
-    Args:
-        hosts: Zero or more `Host`s to add to the collection.
+    :param hosts: Zero or more `Host`s to add to the collection.
     """
 
     _hosts: list[Host] = []
     _columns: list[str] = ["Hostname", "MAC Address", "IP Address", "Port"]
+    """The column names for the hosts table."""
     _fields: list[str] = ["name", "mac", "ip", "port"]
+    """The `Host` attribute name for each column in the hosts table."""
 
     def __init__(self, hosts: t.Optional[Host | list[Host]] = None):
         if hosts is None:
@@ -157,8 +152,7 @@ class Hosts:
     def get(self, name: str) -> t.Optional[Host]:
         """Get a host by name.
 
-        Args:
-            name: The name of the host to get.
+        :param name: The name of the host to get.
         """
         return next((host for host in self._hosts if host.name.lower() == name.lower()), None)
 

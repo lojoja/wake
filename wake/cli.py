@@ -26,11 +26,9 @@ logger = logging.getLogger(__package__)
 def build_hosts(data: t.Optional[dict[str, list[HostData]]]) -> Hosts:
     """Create hosts from configuration file data.
 
-    Arguments:
-        data: The parsed configuration file data.
+    :param data: The parsed configuration file data.
 
-    Raises:
-        ValueError: When the configuration file could not be parsed.
+    :raises ValueError: When the configuration file could not be parsed.
     """
     hosts = Hosts()
 
