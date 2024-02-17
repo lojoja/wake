@@ -33,25 +33,34 @@ Commands:
 
 ### Examples
 
+_Examples use the configuration shown in [Configuration](#Configuration)_
+
 Wake a specific host:
 
 ```
-> wake host myhost
+$ wake host abcd
+Waking host "abcd"
 ```
 
 Wake all hosts:
 
 ```
-> wake host --all
+$ wake host --all
+Waking host "abcd"
+Waking host "wxyz"
 ```
 
 Show hosts:
 
 ```
-> wake show
+$ wake show
+Hostname    MAC Address        IP Address         Port
+----------  -----------------  ---------------  ------
+abcd        AA:BB:CC:DD:EE:FF  255.255.255.255       9
+wxyz        00:11:22:33:44:55  192.168.0.255         7
 ```
 
-## Configure
+## Configuration
 
 Hosts should be defined in the file `~/.config/wake.toml`. Every host must have a `name` and `mac` value; `ip` and `port` are optional. `ip` is an IPv4 address. Optional valid MAC address separators are `:`, `-`, and `.`. The number of characters between separators does not matter. Example formats:
 
@@ -64,13 +73,13 @@ Example configuration:
 
 ```
 [[ hosts ]]
-name = "myhost"
+name = "abcd"
 mac = "AABBCCDDEEFF"
 
 [[ hosts ]]
-name = "myotherhost"
+name = "wxyz"
 mac = "00:11:22:33:44:55"
-ip = "255.255.255.255"
+ip = "192.168.0.255"
 port = 7
 ```
 
