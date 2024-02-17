@@ -10,7 +10,7 @@ import socket
 import typing as t
 
 import click
-from clickext import ClickextCommand, ClickextGroup, config_option, init_logging, verbose_option
+from clickext import ClickextCommand, ClickextGroup, config_option, verbose_option
 
 from .wake import Host, Hosts
 
@@ -21,7 +21,6 @@ CONFIG_FILE = Path("~/.config/wake.toml").expanduser()
 CONFIG_HOST_PROPERTIES = ["name", "mac", "ip", "port"]
 
 logger = logging.getLogger(__package__)
-init_logging(logger)
 
 
 def build_hosts(data: t.Optional[dict[str, list[HostData]]]) -> Hosts:
