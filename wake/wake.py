@@ -11,6 +11,9 @@ import typing as t
 from tabulate import tabulate
 
 
+__all__ = ["Host", "Hosts"]
+
+
 MAC_PATTERN = re.compile(r"^(?:[0-9A-F]{2}([:]))(?:[0-9A-F]{2}\1){4}[0-9A-F]{2}", re.IGNORECASE)
 MAC_REPLACE = [".", "-", ":"]
 MAC_SEPARATOR = ":"

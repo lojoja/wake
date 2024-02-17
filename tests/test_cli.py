@@ -8,8 +8,8 @@ from click.testing import CliRunner
 import pytest
 from pytest_mock import MockerFixture
 
-from wake.wake import Hosts
 from wake.cli import build_hosts, cli
+from wake.wake import Hosts
 
 
 @pytest.mark.parametrize("name", ["foo", ""])
