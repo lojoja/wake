@@ -4,7 +4,7 @@ A simple wakeonlan implementation for waking defined hosts.
 
 ## Requirements
 
-- Python 3.10.x, 3.11.x
+- Python 3.10.x - 3.13.x
 - Linux / macOS
 
 **Note:** wake is not tested on Windows.
