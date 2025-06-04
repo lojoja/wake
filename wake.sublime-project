@@ -1,27 +1,27 @@
 {
-	"folders": [
-		{
-			"folder_exclude_patterns": ["*.egg-info", ".pytest_cache", "__pycache__"],
-			"path": "."
-		}
-	],
-	"settings": {
-		"LSP": {
-			"LSP-pylsp": {
-				"settings": {
-					"pylsp.plugins.pylint.executable": ".venv/bin/pylint"
-				}
-			},
-			"LSP-ruff": {
-				"enabled": false
-			},
-			"ltex-ls": {
-				"settings": {
-					"ltex.dictionary": {
-						"en-US": ["wakeonlan"]
-					}
-				}
-			}
-		}
-	}
+  "folders": [
+    {
+      "folder_exclude_patterns": ["*.egg-info", ".pytest_cache", "__pycache__"],
+      "path": "."
+    }
+  ],
+  "settings": {
+    "LSP": {
+      "LSP-pylsp": {
+        "settings": {
+          "pylsp.plugins.pylint.executable": ".venv/bin/pylint"
+        }
+      },
+      "LSP-ruff": {
+        "enabled": false
+      },
+      "ltex-ls": {
+        "settings": {
+          "ltex.dictionary": {
+            "en-US": ["wakeonlan"]
+          }
+        }
+      }
+    }
+  }
 }
