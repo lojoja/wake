@@ -10,7 +10,6 @@ import typing as t
 
 from tabulate import tabulate
 
-
 __all__ = ["Host", "Hosts"]
 
 

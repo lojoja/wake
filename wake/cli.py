@@ -14,7 +14,6 @@ from clickext import ClickextCommand, ClickextGroup, config_option, verbose_opti
 
 from .wake import Host, Hosts
 
-
 HostData = t.TypedDict("HostData", {"name": str, "mac": str, "ip": str, "port": int})
 
 CONFIG_FILE = Path("~/.config/wake.toml").expanduser()
