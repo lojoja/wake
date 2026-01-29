@@ -11,7 +11,7 @@ from clickext import ClickextCommand, ClickextGroup, config_option, verbose_opti
 from .wake import Host, Hosts
 
 
-class HostData(t.TypedDict):  # noqa: D101
+class HostData(t.TypedDict, total=False):  # noqa: D101
     name: str
     mac: str
     ip: str
@@ -51,7 +51,7 @@ def build_hosts(data: dict[str, list[HostData]] | None) -> Hosts:
         unknown_props = set(host_data.keys()).difference(CONFIG_HOST_PROPERTIES)
 
         for prop in unknown_props:
-            del host_data[prop]
+            del host_data[prop]  # ty:ignore[invalid-argument-type]
             logger.warning("Unknown property (%s): %s", name, prop)
 
         host_obj = Host(**host_data)

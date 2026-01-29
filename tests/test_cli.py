@@ -27,7 +27,7 @@ def test_build_hosts_no_hosts_defined(capsys: pytest.CaptureFixture, data: dict 
 
 
 def test_build_hosts_unknown_property(capsys: pytest.CaptureFixture) -> None:
-    hosts = build_hosts({"hosts": [{"name": "foo", "mac": "AA:BB:CC:DD:EE:FF", "x": "y"}]})
+    hosts = build_hosts({"hosts": [{"name": "foo", "mac": "AA:BB:CC:DD:EE:FF", "x": "y"}]})  # ty:ignore[invalid-argument-type, invalid-key]
     assert hosts.count == 1
     assert capsys.readouterr().err == "Warning: Unknown property (foo): x\n"
 

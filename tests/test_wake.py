@@ -1,8 +1,12 @@
 from contextlib import nullcontext as does_not_raise
+from typing import TYPE_CHECKING
 
 import pytest
 
 from wake.wake import Host, Hosts
+
+if TYPE_CHECKING:
+    from wake.cli import HostData
 
 
 def test_host_name() -> None:
@@ -45,9 +49,9 @@ def test_host_validate(valid: bool) -> None:
     error_msg = str(["Invalid IPv4 Address", "Invalid MAC Address", "Invalid name", "Invalid port"])
 
     if valid:
-        data = {"ip": "127.0.0.1", "mac": "AA:BB:CC:00:11:22", "name": "foo", "port": 9}
+        data: HostData = {"ip": "127.0.0.1", "mac": "AA:BB:CC:00:11:22", "name": "foo", "port": 9}
     else:
-        data = {"ip": "127.0.0.x", "mac": "ZZ:BB:CC:00:11:22", "name": "", "port": -1}
+        data: HostData = {"ip": "127.0.0.x", "mac": "ZZ:BB:CC:00:11:22", "name": "", "port": -1}
 
     host = Host(**data)
     context = does_not_raise() if valid else pytest.raises(ValueError, match=error_msg)
