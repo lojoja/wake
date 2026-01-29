@@ -1,7 +1,4 @@
-"""
-wake
+"""The wake public API."""
 
-The wake public API
-"""
-
-from .wake import Host as Host, Hosts as Hosts
+from .wake import Host as Host
+from .wake import Hosts as Hosts

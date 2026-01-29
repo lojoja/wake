@@ -1,12 +1,8 @@
-"""
-wake
+"""A simple wakeonlan implementation."""
 
-A simple wakeonlan implementation.
-"""
-
-from ipaddress import AddressValueError, IPv4Address
 import re
 import typing as t
+from ipaddress import AddressValueError, IPv4Address
 
 from tabulate import tabulate
 
@@ -21,7 +17,14 @@ MAC_SEPARATOR = ":"
 class Host:
     """A network host."""
 
-    def __init__(self, name: str = "", mac: str = "", ip: str = "255.255.255.255", port: int = 9):
+    def __init__(self, name: str = "", mac: str = "", ip: str = "255.255.255.255", port: int = 9) -> None:
+        """Initialize a network host.
+
+        :param name: The host name.
+        :param mac: The host's MAC address.
+        :param ip: The host's IP address.
+        :param port: The hosts's port.
+        """
         self._name = name
         self._ip = ip
         self._port = port
@@ -52,10 +55,8 @@ class Host:
     def magic_packet(self) -> bytes:
         """The host magic packet."""
         mac = self.mac.replace(MAC_SEPARATOR, "")
-        data = f'{"FF" * 6}{mac * 16}'
-        packet = bytes.fromhex(data)
-
-        return packet
+        data = f"{'FF' * 6}{mac * 16}"
+        return bytes.fromhex(data)
 
     def validate(self) -> None:
         """Validate a host.
@@ -82,7 +83,7 @@ class Host:
             if char in value:
                 value = value.replace(char, "")
 
-        if len(value) == 12:
+        if len(value) == 12:  # noqa: PLR2004
             value = MAC_SEPARATOR.join(value[i : i + 2] for i in range(0, 12, 2))
 
         return value
@@ -91,35 +92,39 @@ class Host:
         try:
             IPv4Address(self.ip)
         except AddressValueError as exc:
-            raise ValueError("Invalid IPv4 Address") from exc
+            msg = "Invalid IPv4 Address"
+            raise ValueError(msg) from exc
 
     def _validate_mac(self) -> None:
         match = MAC_PATTERN.match(self._mac)
         if not match:
-            raise ValueError("Invalid MAC Address")
+            msg = "Invalid MAC Address"
+            raise ValueError(msg)
 
     def _validate_name(self) -> None:
         if self.name == "":
-            raise ValueError("Invalid name")
+            msg = "Invalid name"
+            raise ValueError(msg)
 
     def _validate_port(self) -> None:
-        if not 0 <= self.port <= 65535:
-            raise ValueError("Invalid port")
+        if not 0 <= self.port <= 65535:  # noqa: PLR2004
+            msg = "Invalid port"
+            raise ValueError(msg)
 
 
 class Hosts:
-    """A collection of network hosts.
+    """A collection of network hosts."""
 
-    :param hosts: Zero or more `Host`s to add to the collection.
-    """
-
-    _hosts: list[Host] = []
-    _columns: list[str] = ["Hostname", "MAC Address", "IP Address", "Port"]
+    _columns: t.ClassVar[list[str]] = ["Hostname", "MAC Address", "IP Address", "Port"]
     """The column names for the hosts table."""
-    _fields: list[str] = ["name", "mac", "ip", "port"]
+    _fields: t.ClassVar[list[str]] = ["name", "mac", "ip", "port"]
     """The `Host` attribute name for each column in the hosts table."""
 
-    def __init__(self, hosts: t.Optional[Host | list[Host]] = None):
+    def __init__(self, hosts: Host | list[Host] | None = None) -> None:
+        """Initialize a hosts collection.
+
+        :param hosts: Zero or more `Host`s to add to the collection.
+        """
         if hosts is None:
             hosts = []
         self._hosts = [hosts] if isinstance(hosts, Host) else hosts
@@ -136,10 +141,7 @@ class Hosts:
 
         for host in self._hosts:
             row = []
-
-            for field in self._fields:
-                row.append(getattr(host, field))
-
+            row.extend([getattr(host, field) for field in self._fields])
             data.append(row)
 
         return tabulate(data, headers="firstrow", tablefmt="simple")
@@ -148,7 +150,7 @@ class Hosts:
         """Add a host to the collection."""
         self._hosts.append(host)
 
-    def get(self, name: str) -> t.Optional[Host]:
+    def get(self, name: str) -> Host | None:
         """Get a host by name.
 
         :param name: The name of the host to get.

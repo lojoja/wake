@@ -1,11 +1,8 @@
-# pylint: disable=missing-module-docstring,missing-function-docstring
-
 from pathlib import Path
-import typing as t
 from unittest.mock import call
 
-from click.testing import CliRunner
 import pytest
+from click.testing import CliRunner
 from pytest_mock import MockerFixture
 
 from wake.cli import build_hosts, cli
@@ -13,35 +10,35 @@ from wake.wake import Hosts
 
 
 @pytest.mark.parametrize("name", ["foo", ""])
-def test_build_hosts_invalid(capsys: pytest.CaptureFixture, name: str):
+def test_build_hosts_invalid(capsys: pytest.CaptureFixture, name: str) -> None:
     err_name = name if name else "#1"  # Unnamed hosts should be referenced by their position in the config file
     err_prop = "name" if not name else "MAC Address"
 
-    hosts = build_hosts({"hosts": [{"name": name, "mac": f"AA:BB:CC:DD:EE:FF{'x' if name else ''}"}]})  # type: ignore
+    hosts = build_hosts({"hosts": [{"name": name, "mac": f"AA:BB:CC:DD:EE:FF{'x' if name else ''}"}]})
     assert hosts.count == 0
     assert capsys.readouterr().err == f"Warning: Invalid host ({err_name}): ['Invalid {err_prop}']\n"
 
 
 @pytest.mark.parametrize("data", [None, {}])
-def test_build_hosts_no_hosts_defined(capsys: pytest.CaptureFixture, data: t.Optional[dict]):
+def test_build_hosts_no_hosts_defined(capsys: pytest.CaptureFixture, data: dict | None) -> None:
     hosts = build_hosts(data)
     assert hosts.count == 0
     assert capsys.readouterr().err == "Warning: No hosts defined\n"
 
 
-def test_build_hosts_unknown_property(capsys: pytest.CaptureFixture):
-    hosts = build_hosts({"hosts": [{"name": "foo", "mac": "AA:BB:CC:DD:EE:FF", "x": "y"}]})  # type: ignore
+def test_build_hosts_unknown_property(capsys: pytest.CaptureFixture) -> None:
+    hosts = build_hosts({"hosts": [{"name": "foo", "mac": "AA:BB:CC:DD:EE:FF", "x": "y"}]})
     assert hosts.count == 1
     assert capsys.readouterr().err == "Warning: Unknown property (foo): x\n"
 
 
-def test_build_hosts_valid(capsys: pytest.CaptureFixture):
-    hosts = build_hosts({"hosts": [{"name": "foo", "mac": "AA:BB:CC:DD:EE:FF"}]})  # type: ignore
+def test_build_hosts_valid(capsys: pytest.CaptureFixture) -> None:
+    hosts = build_hosts({"hosts": [{"name": "foo", "mac": "AA:BB:CC:DD:EE:FF"}]})
     assert hosts.count == 1
     assert capsys.readouterr().err == ""
 
 
-def test_cli_version(config: Path):
+def test_cli_version(config: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(cli, ["-c", str(config), "--version"])
     assert result.output.startswith("cli, version")
@@ -49,7 +46,7 @@ def test_cli_version(config: Path):
 
 @pytest.mark.parametrize("short_opts", [True, False])
 @pytest.mark.parametrize("verbose", [True, False])
-def test_cli_verbosity(caplog: pytest.LogCaptureFixture, config: Path, verbose: bool, short_opts: bool):
+def test_cli_verbosity(caplog: pytest.LogCaptureFixture, config: Path, verbose: bool, short_opts: bool) -> None:
     CliRunner().invoke(
         cli, ["-c", str(config), "show", "--help", ("-v" if short_opts else "--verbose") if verbose else ""]
     )
@@ -58,7 +55,7 @@ def test_cli_verbosity(caplog: pytest.LogCaptureFixture, config: Path, verbose: 
 
 @pytest.mark.parametrize("short_opts", [True, False])
 @pytest.mark.parametrize("all_hosts", [True, False])
-def test_host(mocker: MockerFixture, config: Path, hosts: Hosts, all_hosts: bool, short_opts: bool):
+def test_host(mocker: MockerFixture, config: Path, hosts: Hosts, all_hosts: bool, short_opts: bool) -> None:
     mock_sendto = mocker.patch("wake.cli.socket.socket.sendto")
     target_hosts = hosts.get_all()
 
@@ -77,7 +74,7 @@ def test_host(mocker: MockerFixture, config: Path, hosts: Hosts, all_hosts: bool
 
 
 @pytest.mark.parametrize("all_hosts", [True, False])
-def test_host_no_hosts_to_wake(mocker: MockerFixture, config: Path, all_hosts: bool):
+def test_host_no_hosts_to_wake(mocker: MockerFixture, config: Path, all_hosts: bool) -> None:
     missing_config_file = f"{config}x"  # Change file name so config is not found
     mock_sendto = mocker.patch("wake.cli.socket.socket.sendto")
 
@@ -91,7 +88,7 @@ def test_host_no_hosts_to_wake(mocker: MockerFixture, config: Path, all_hosts: b
     mock_sendto.assert_not_called()
 
 
-def test_hosts_known_and_unknown_host(mocker: MockerFixture, config: Path, hosts: Hosts):
+def test_hosts_known_and_unknown_host(mocker: MockerFixture, config: Path, hosts: Hosts) -> None:
     mock_sendto = mocker.patch("wake.cli.socket.socket.sendto")
     known_host = hosts.get_all()[0]
 
@@ -103,7 +100,7 @@ def test_hosts_known_and_unknown_host(mocker: MockerFixture, config: Path, hosts
     mock_sendto.assert_called_once_with(known_host.magic_packet, (known_host.ip, known_host.port))
 
 
-def test_host_mutually_exclusive_params(mocker: MockerFixture, config: Path):
+def test_host_mutually_exclusive_params(mocker: MockerFixture, config: Path) -> None:
     mock_sendto = mocker.patch("wake.cli.socket.socket.sendto")
 
     runner = CliRunner()
@@ -113,7 +110,7 @@ def test_host_mutually_exclusive_params(mocker: MockerFixture, config: Path):
     mock_sendto.assert_not_called()
 
 
-def test_host_send_fails(mocker: MockerFixture, config: Path, hosts: Hosts):
+def test_host_send_fails(mocker: MockerFixture, config: Path, hosts: Hosts) -> None:
     mock_sendto = mocker.patch("wake.cli.socket.socket.sendto", side_effect=OSError)
     target_host = hosts.get_all()[0]
 
@@ -125,7 +122,7 @@ def test_host_send_fails(mocker: MockerFixture, config: Path, hosts: Hosts):
     mock_sendto.assert_called_once_with(target_host.magic_packet, (target_host.ip, target_host.port))
 
 
-def test_show(config: Path, hosts: Hosts):
+def test_show(config: Path, hosts: Hosts) -> None:
     runner = CliRunner()
     result = runner.invoke(cli, ["-c", str(config), "show"])
     assert result.output == f"\n{hosts.table}\n"

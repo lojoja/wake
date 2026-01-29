@@ -1,5 +1,3 @@
-# pylint: disable=missing-module-docstring,missing-function-docstring
-
 from pathlib import Path
 
 import pytest
@@ -9,7 +7,7 @@ from wake.wake import Host, Hosts
 
 @pytest.fixture(name="config", scope="session")
 def config_fixture(tmp_path_factory: pytest.TempPathFactory, hosts: Hosts) -> Path:
-    """A config file with the `hosts` fixture data."""
+    """A config file with the `hosts` fixture data."""  # noqa: D401
     data = ""
 
     for host in hosts.get_all():
@@ -23,6 +21,6 @@ def config_fixture(tmp_path_factory: pytest.TempPathFactory, hosts: Hosts) -> Pa
 
 @pytest.fixture(name="hosts", scope="session")
 def hosts_fixture() -> Hosts:
-    """Defined hosts for CLI tests."""
+    """Defined hosts for CLI tests."""  # noqa: D401
     hosts = [Host(name="foo", mac="00:11:22:33:44:55"), Host(name="bar", mac="AA:BB:CC:DD:EE:FF")]
     return Hosts(hosts)

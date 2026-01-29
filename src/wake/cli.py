@@ -1,20 +1,22 @@
-"""
-wake
-
-The command-line interface for wake
-"""
+"""The command-line interface for wake."""
 
 import logging
-from pathlib import Path
 import socket
 import typing as t
+from pathlib import Path
 
 import click
 from clickext import ClickextCommand, ClickextGroup, config_option, verbose_option
 
 from .wake import Host, Hosts
 
-HostData = t.TypedDict("HostData", {"name": str, "mac": str, "ip": str, "port": int})
+
+class HostData(t.TypedDict):  # noqa: D101
+    name: str
+    mac: str
+    ip: str
+    port: int
+
 
 CONFIG_FILE = Path("~/.config/wake.toml").expanduser()
 CONFIG_HOST_PROPERTIES = ["name", "mac", "ip", "port"]
@@ -22,7 +24,7 @@ CONFIG_HOST_PROPERTIES = ["name", "mac", "ip", "port"]
 logger = logging.getLogger(__package__)
 
 
-def build_hosts(data: t.Optional[dict[str, list[HostData]]]) -> Hosts:
+def build_hosts(data: dict[str, list[HostData]] | None) -> Hosts:
     """Create hosts from configuration file data.
 
     :param data: The parsed configuration file data.
@@ -70,7 +72,7 @@ def build_hosts(data: t.Optional[dict[str, list[HostData]]]) -> Hosts:
 @config_option(CONFIG_FILE, processor=build_hosts)
 @verbose_option(logger)
 def cli() -> None:
-    """A simple wakeonlan implementation."""
+    """A simple wakeonlan implementation."""  # noqa: D401
     logger.debug("%s started", __package__)
 
 
@@ -78,15 +80,16 @@ def cli() -> None:
 @click.option("--all", "-a", "all_", is_flag=True, default=False, help="Wake all hosts.")
 @click.argument("names", nargs=-1, type=click.STRING)
 @click.pass_obj
-def host(hosts: Hosts, all_: bool, names: tuple[str]) -> None:
+def host(hosts: Hosts, all_: bool, names: tuple[str]) -> None:  # noqa: FBT001
     """Wake the specified host(s).
 
     NAMES: The host name(s) to wake.
-    """
+    """  # noqa: D402
     hosts_to_wake: list[Host] = []
 
     if all_ and names:
-        raise click.BadOptionUsage("all", "--all cannot be used with named hosts")
+        msg = ("all", "--all cannot be used with named hosts")
+        raise click.BadOptionUsage(*msg)
 
     if all_:
         hosts_to_wake = hosts.get_all()
@@ -113,7 +116,8 @@ def host(hosts: Hosts, all_: bool, names: tuple[str]) -> None:
             try:
                 sock.sendto(target.magic_packet, (target.ip, target.port))
             except OSError as exc:
-                raise click.ClickException("Failed to send magic packet") from exc
+                msg = "Failed to send magic packet"
+                raise click.ClickException(msg) from exc
 
 
 @cli.command(cls=ClickextCommand)

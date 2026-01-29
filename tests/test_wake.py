@@ -1,30 +1,27 @@
-# pylint: disable=missing-module-docstring,missing-function-docstring,protected-access
-
 from contextlib import nullcontext as does_not_raise
-import typing as t
 
 import pytest
 
 from wake.wake import Host, Hosts
 
 
-def test_host_name():
+def test_host_name() -> None:
     assert Host(name="foo").name == "foo"
 
 
-def test_host_mac():
+def test_host_mac() -> None:
     assert Host(mac="AA:BB:CC:00:11:22").mac == "AA:BB:CC:00:11:22"
 
 
-def test_host_ip():
+def test_host_ip() -> None:
     assert Host(ip="127.0.0.1").ip == "127.0.0.1"
 
 
-def test_host_port():
+def test_host_port() -> None:
     assert Host(port=1).port == 1
 
 
-def test_host_magic_packet():
+def test_host_magic_packet() -> None:
     packet = Host(mac="AA:BB:CC:00:11:22").magic_packet
     assert packet == (
         b"\xff\xff\xff\xff\xff\xff"
@@ -38,13 +35,13 @@ def test_host_magic_packet():
 @pytest.mark.parametrize(
     "value", ["aa:bb:cc:00:11:22", "aa-bb-cc-00-11-22", "aa.bb.cc.00.11.22", "aabb.cc00.1122", "aabbcc001122"]
 )
-def test_host_mac_format(value: str):
+def test_host_mac_format(value: str) -> None:
     host = Host(mac=value)
     assert host.mac == "AA:BB:CC:00:11:22"
 
 
 @pytest.mark.parametrize("valid", [True, False])
-def test_host_validate(valid: bool):
+def test_host_validate(valid: bool) -> None:
     error_msg = str(["Invalid IPv4 Address", "Invalid MAC Address", "Invalid name", "Invalid port"])
 
     if valid:
@@ -60,7 +57,7 @@ def test_host_validate(valid: bool):
 
 
 @pytest.mark.parametrize("valid", [True, False])
-def test_host__validate_ip(valid: bool):
+def test_host__validate_ip(valid: bool) -> None:
     host = Host(ip="127.0.0.1" if valid else "127.0.0.x")
     context = does_not_raise() if valid else pytest.raises(ValueError, match="Invalid IPv4 Address")
 
@@ -69,9 +66,9 @@ def test_host__validate_ip(valid: bool):
 
 
 @pytest.mark.parametrize(
-    ["value", "valid"], [("AA:BB:CC:00:11:22", True), ("ZZ:BB:CC:00:11:22", False), ("AA:BB:CC:00:11:22A", False)]
+    ("value", "valid"), [("AA:BB:CC:00:11:22", True), ("ZZ:BB:CC:00:11:22", False), ("AA:BB:CC:00:11:22A", False)]
 )
-def test_host__validate_mac(value: str, valid: bool):
+def test_host__validate_mac(value: str, valid: bool) -> None:
     host = Host(mac=value)
     context = does_not_raise() if valid else pytest.raises(ValueError, match="Invalid MAC Address")
 
@@ -80,7 +77,7 @@ def test_host__validate_mac(value: str, valid: bool):
 
 
 @pytest.mark.parametrize("valid", [True, False])
-def test_host__validate_name(valid: bool):
+def test_host__validate_name(valid: bool) -> None:
     host = Host(name="foo" if valid else "")
     context = does_not_raise() if valid else pytest.raises(ValueError, match="Invalid name")
 
@@ -88,8 +85,8 @@ def test_host__validate_name(valid: bool):
         host._validate_name()
 
 
-@pytest.mark.parametrize(["value", "valid"], [(-1, False), (0, True), (7, True), (65536, False)])
-def test_host__validate_port(value: int, valid: bool):
+@pytest.mark.parametrize(("value", "valid"), [(-1, False), (0, True), (7, True), (65536, False)])
+def test_host__validate_port(value: int, valid: bool) -> None:
     host = Host(port=value)
     context = does_not_raise() if valid else pytest.raises(ValueError, match="Invalid port")
 
@@ -98,7 +95,7 @@ def test_host__validate_port(value: int, valid: bool):
 
 
 @pytest.mark.parametrize("value", [None, [], Host(), [Host()]])
-def test_hosts(value: t.Optional[Host | list[Host]]):
+def test_hosts(value: Host | list[Host] | None) -> None:
     hosts = Hosts(value)
 
     if value is None:
@@ -109,11 +106,11 @@ def test_hosts(value: t.Optional[Host | list[Host]]):
         assert hosts.count == len(value)
 
 
-def test_hosts_count():
-    assert Hosts([Host(), Host()]).count == 2
+def test_hosts_count() -> None:
+    assert Hosts([Host(), Host()]).count == 2  # noqa: PLR2004
 
 
-def test_hosts_table():
+def test_hosts_table() -> None:
     host_data = [Host(name="foo", mac="AA:BB:CC:00:11:22"), Host(name="bar", mac="DD:EE:FF:33:44:55")]
     hosts = Hosts(host_data)
     result = hosts.table
@@ -126,18 +123,18 @@ def test_hosts_table():
     )
 
 
-def test_hosts_add():
+def test_hosts_add() -> None:
     hosts = Hosts(Host())
     hosts.add(Host())
-    assert hosts.count == 2
+    assert hosts.count == 2  # noqa: PLR2004
 
 
 @pytest.mark.parametrize("name", ["foo", "FOO", "bar"])
-def test_hosts_get(name: str):
+def test_hosts_get(name: str) -> None:
     host = Host(name="foo")
     assert Hosts(host).get(name) == (None if name == "bar" else host)
 
 
-def test_hosts_get_all():
+def test_hosts_get_all() -> None:
     values = [Host(), Host()]
     assert Hosts(values).get_all() == values
