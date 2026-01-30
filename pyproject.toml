@@ -21,33 +21,28 @@ dependencies = [
   "tabulate>=0.9,<1",
 ]
 
-[dependency-groups]
-dev = [
-  "pytest>=9.0.2,<10",
-  "pytest-cov>=4.1,<8.0",
-  "pytest-mock>=3.15.1,<4",
-  "ruff>=0.14.14",
-  "ty>=0.0.14",
-]
+[project.scripts]
+wake = "wake.cli:cli"
 
 [project.urls]
 homepage = "https://github.com/lojoja/wake"
 repository = "https://github.com/lojoja/wake"
 "Bug Tracker" = "https://github.com/lojoja/wake/issues"
 
-[project.scripts]
-wake = "wake.cli:cli"
-
 [build-system]
 requires = ["uv_build>=0.9.26,<0.10.0"]
 build-backend = "uv_build"
 
-[tool.coverage.report]
-exclude_lines = [
-  "pragma: no cover",
-  "def __repr__",
-  "if log:"
+[dependency-groups]
+dev = [
+  "pytest>=9.0.2,<10",
+  "pytest-cov>=7.0.0,<8.0",
+  "pytest-mock>=3.15.1,<4",
+  "ruff>=0.14.14",
+  "ty>=0.0.14",
 ]
+
+[tool.coverage.report]
 fail_under = 100
 show_missing = true
 
@@ -56,11 +51,11 @@ source = ["src"]
 omit = ["tests"]
 branch = true
 
-[tool.pytest.ini_options]
-addopts = "--strict-markers"
+[tool.pytest]
 testpaths = ["tests"]
-markers=[]
-filterwarnings = ["ignore:::.*pytest_cov*"]
+strict_markers = true
+markers = []
+filterwarnings = []
 
 [tool.ruff]
 line-length = 120
