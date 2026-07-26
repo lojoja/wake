@@ -11,7 +11,7 @@ from wake.wake import Hosts
 
 @pytest.mark.parametrize("name", ["foo", ""])
 def test_build_hosts_invalid(capsys: pytest.CaptureFixture, name: str) -> None:
-    err_name = name if name else "#1"  # Unnamed hosts should be referenced by their position in the config file
+    err_name = name or "#1"  # Unnamed hosts should be referenced by their position in the config file
     err_prop = "name" if not name else "MAC Address"
 
     hosts = build_hosts({"hosts": [{"name": name, "mac": f"AA:BB:CC:DD:EE:FF{'x' if name else ''}"}]})
