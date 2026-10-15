@@ -80,7 +80,7 @@ def cli() -> None:
 @click.option("--all", "-a", "all_", is_flag=True, default=False, help="Wake all hosts.")
 @click.argument("names", nargs=-1, type=click.STRING)
 @click.pass_obj
-def host(hosts: Hosts, all_: bool, names: tuple[str]) -> None:  # noqa: FBT001
+def host(hosts: Hosts, all_: bool, names: tuple[str, ...]) -> None:  # noqa: FBT001
     """Wake the specified host(s).
 
     NAMES: The host name(s) to wake.
